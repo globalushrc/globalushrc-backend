@@ -1,0 +1,216 @@
+@import "tailwindcss";
+
+@layer utilities {
+  .animate-slow-zoom {
+    animation: slow-zoom 20s infinite alternate linear;
+  }
+  .animate-pulse-slow {
+    animation: pulse 6s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .animate-pulse-slower {
+    animation: pulse 10s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  .animate-fade-in-up {
+    animation: fade-in-up 0.8s ease-out forwards;
+  }
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  .animate-typewriter {
+    overflow: hidden;
+    white-space: nowrap;
+    animation: typewriter 2.5s steps(40) forwards;
+  }
+  .animate-whatsapp-glow {
+    animation: whatsapp-glow 2s ease-in-out infinite;
+  }
+}
+
+@keyframes slow-zoom {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes blink-cursor {
+  from,
+  to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: #3b82f6;
+  }
+}
+
+.animate-grow {
+  animation: grow 2s ease-in-out infinite;
+}
+
+@keyframes grow {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes ripple-wave-effect {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+.ripple-ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid currentColor;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: -1;
+  animation: ripple-wave-effect 3s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+
+.ripple-ring-1 {
+  animation-delay: 0s;
+}
+.ripple-ring-2 {
+  animation-delay: 1s;
+}
+.ripple-ring-3 {
+  animation-delay: 2s;
+}
+
+@keyframes whatsapp-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 15px 2px rgba(16, 185, 129, 0.3);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 25px 8px rgba(16, 185, 129, 0.5);
+    transform: scale(1.05);
+  }
+}
+
+.hover-glow-whatsapp:hover {
+  box-shadow:
+    0 0 25px 8px rgba(16, 185, 129, 0.4),
+    inset 0 0 12px rgba(16, 185, 129, 0.3) !important;
+  filter: brightness(1.15);
+  transform: scale(1.08) translateY(-2px);
+}
+
+.hover-glow-linkedin:hover {
+  box-shadow:
+    0 0 30px 10px rgba(37, 99, 235, 0.4),
+    inset 0 0 15px rgba(37, 99, 235, 0.3) !important;
+}
+
+.hover-glow-twitter:hover {
+  box-shadow:
+    0 0 30px 10px rgba(59, 130, 246, 0.4),
+    inset 0 0 15px rgba(59, 130, 246, 0.3) !important;
+}
+
+.hover-glow-facebook:hover {
+  box-shadow:
+    0 0 30px 10px rgba(29, 78, 216, 0.4),
+    inset 0 0 15px rgba(29, 78, 216, 0.3) !important;
+}
+
+.hover-glow-instagram:hover {
+  box-shadow:
+    0 0 30px 10px rgba(219, 39, 119, 0.4),
+    inset 0 0 15px rgba(219, 39, 119, 0.3) !important;
+}
+
+.hover-glow-youtube:hover {
+  box-shadow:
+    0 0 30px 10px rgba(220, 38, 38, 0.4),
+    inset 0 0 15px rgba(220, 38, 38, 0.3) !important;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-slate-800 font-sans;
+  }
+}
+
+/* React Quill Editor Styles */
+.h-64 .ql-container {
+  height: 240px;
+}
+
+.h-64 .ql-editor {
+  min-height: 200px;
+}
+/* react-phone-input-2 overrides */
+.react-tel-input {
+  width: 100% !important;
+}
+
+.react-tel-input .flag {
+  transform: scale(1.2); /* Make flags slightly larger */
+  image-rendering: -webkit-optimize-contrast; /* Crisper flags */
+}
+
+.react-tel-input .selected-flag {
+  padding-left: 12px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: transparent !important;
+}
+
+.react-tel-input .selected-flag:hover,
+.react-tel-input .selected-flag:focus {
+  background: rgba(0, 0, 0, 0.02) !important;
+}
+
+.react-tel-input .country-list {
+  border-radius: 12px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid #f1f5f9 !important;
+  margin-top: 8px !important;
+}
