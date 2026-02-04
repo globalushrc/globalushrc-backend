@@ -5,8 +5,8 @@ services:
     env: node
     plan: free # Can be changed to 'starter' or higher
     region: singapore # Choose the region closest to you
-    buildCommand: npm install
-    startCommand: node index.js
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
     envVars:
       - key: NODE_ENV
         value: production
