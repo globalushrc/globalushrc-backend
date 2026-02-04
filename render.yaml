@@ -16,7 +16,7 @@ services:
         generateValue: true
       - key: FRONTEND_URL
         fromService:
-          type: static
+          type: static_site
           name: global-us-hrc-frontend
           property: url
       - key: BASE_URL
