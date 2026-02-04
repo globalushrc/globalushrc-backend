@@ -37,7 +37,7 @@ services:
     #   sizeGB: 1
 
   # Frontend Static Site
-  - type: static
+  - type: static_site
     name: global-us-hrc-frontend
     env: static
     region: singapore
