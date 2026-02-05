@@ -1,7 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
+  "description": "Your **Global US HR Consultant Backend** has been successfully enhanced with **enterprise-grade security, input validation, rate limiting, and comprehensive logging**.",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -17,9 +17,13 @@
     "cors": "^2.8.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "express-validator": "^7.3.1",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.0.2",
-    "stripe": "^20.3.0"
+    "stripe": "^20.3.0",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"
