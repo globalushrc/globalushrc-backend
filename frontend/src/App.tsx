@@ -1,6 +1,6 @@
+import { Routes, Route, useLocation } from "react-router-dom";
 const API_URL = import.meta.env.VITE_API_URL;
 
-import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Home from "./pages/Home";
