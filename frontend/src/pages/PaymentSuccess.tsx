@@ -140,9 +140,9 @@ const PaymentSuccess = () => {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Ref ID:</span>
-                    <span className="font-mono text-[10px] text-slate-400">
-                      {bookingDetails.paymentId}
+                    <span className="text-slate-500 mr-2">Ref ID:</span>
+                    <span className="bg-slate-100 px-4 py-1.5 rounded-lg font-mono font-black text-slate-800 text-lg shadow-inner">
+                      {bookingDetails.referenceId}
                     </span>
                   </div>
                 </div>

@@ -157,19 +157,6 @@ const Calendar: React.FC<CalendarProps> = ({
         >
           <span className={isSelected ? "mt-[-8px]" : ""}>{day}</span>
 
-          {/* Availability Count Badge */}
-          {!isUnavailable && cellDate >= today && count !== undefined && (
-            <div
-              className={`mt-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-black leading-none ${
-                isSelected
-                  ? "bg-white text-blue-600"
-                  : "bg-emerald-500 text-white"
-              }`}
-            >
-              {count}
-            </div>
-          )}
-
           {holidayName && (
             <span className="text-[6px] leading-[6px] absolute bottom-1 truncate max-w-[90%] font-black uppercase tracking-tighter opacity-70">
               {holidayName}

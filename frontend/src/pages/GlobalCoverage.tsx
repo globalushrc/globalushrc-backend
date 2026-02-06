@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaFlag,
   FaBuilding,
@@ -209,7 +210,38 @@ const RegionCard = ({ region, index }: { region: any; index: number }) => {
   );
 };
 
+const coverageImages = [
+  {
+    url: "/assets/images/france_eiffel.png",
+    name: "Paris, France",
+  },
+  {
+    url: "/assets/images/burj_khalifa_correct.jpg",
+    name: "Dubai, UAE",
+  },
+  {
+    url: "/assets/images/australia_highres.jpg",
+    name: "Sydney, Australia",
+  },
+  {
+    url: "/assets/images/toronto_real.png",
+    name: "Toronto, Canada",
+  },
+  {
+    url: "/assets/images/belgium_grand_place.png",
+    name: "Brussels, Belgium",
+  },
+];
+
 const GlobalCoverage = () => {
+  const [currentImage, setCurrentImage] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImage((prev) => (prev + 1) % coverageImages.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
   const euVisas = [
     { name: "EU Blue Card", time: "1-3 months" },
     { name: "ICT Permit", time: "2-4 months" },
@@ -669,93 +701,147 @@ const GlobalCoverage = () => {
 
   return (
     <div className="bg-white min-h-screen font-sans">
-      {/* Immersive Hero Section */}
+      {/* Immersive Hero Section - Clean HD Slider */}
       <div className="relative h-[90vh] flex items-center justify-center text-white overflow-hidden bg-[#020617]">
-        {/* New Hero Background Layer */}
+        {/* Background Slider Layer */}
         <div className="absolute inset-0 z-0">
-          <div className="absolute inset-0 bg-[url('/assets/images/global_hero_final.jpg')] bg-cover bg-center opacity-80"></div>
-          {/* Subtle overlay only to ensure readability, but keeping it very clear */}
-          <div className="absolute inset-0 bg-black/30"></div>
-          <div className="absolute inset-0 bg-gradient-to-t from-[#020617] via-transparent to-transparent"></div>
+          <AnimatePresence>
+            <motion.div
+              key={currentImage}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 2, ease: "easeInOut" }}
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: `url('${coverageImages[currentImage].url}')`,
+              }}
+            />
+          </AnimatePresence>
+
+          {/* Location Badge */}
+          <motion.div
+            key={`label-${currentImage}`}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="absolute top-12 right-12 z-20 flex items-center gap-2 bg-black/30 backdrop-blur-md px-4 py-2 rounded-full border border-white/10"
+          >
+            <FaMapMarkerAlt className="text-red-500 text-sm" />
+            <span className="text-white text-xs font-bold uppercase tracking-widest">
+              {coverageImages[currentImage].name}
+            </span>
+          </motion.div>
+
+          {/* Refined Overlays for Clarity */}
+          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/40 to-transparent"></div>
+          <div className="absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#020617] via-[#020617]/40 to-transparent"></div>
         </div>
 
         <div className="container mx-auto px-6 relative z-10 text-center max-w-5xl pt-20">
-          <div className="space-y-6 mb-12">
-            <h1 className="text-4xl md:text-7xl font-bold tracking-tight leading-none mb-4">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2 }}
+            className="space-y-6 mb-12"
+          >
+            <h1 className="text-4xl md:text-7xl font-bold tracking-tight leading-none mb-4 drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
               Global Coverage
             </h1>
-            <h1 className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight">
+            <h1 className="text-3xl md:text-5xl font-semibold tracking-tight leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
               Local Expertise.
             </h1>
-          </div>
+          </motion.div>
 
-          <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed mb-16 font-light">
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 1.2 }}
+            className="text-lg md:text-xl text-white font-semibold max-w-2xl mx-auto leading-relaxed mb-16 drop-shadow-[0_2px_10px_rgba(0,0,0,1)]"
+          >
             Empowering your enterprise to operate seamlessly across 50+
             countries, eliminating the barriers of international HR and
             compliance with precision and speed.
-          </p>
+          </motion.p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            {/* 
             <Link
               to="/contact"
-              className="px-10 py-5 bg-white text-blue-900 font-black text-lg rounded-full hover:bg-gray-100 transition-all shadow-xl"
+              className="px-10 py-5 bg-white text-blue-900 font-black text-lg rounded-full hover:bg-gray-100 transition-all shadow-2xl hover:-translate-y-1"
             >
               Start Free Assessment
             </Link>
+            */}
 
             <a
               href="#regions"
-              className="text-white hover:text-blue-400 font-bold text-lg transition-colors py-4 flex items-center gap-2 border-b-2 border-white/20 hover:border-blue-400"
+              className="text-white hover:text-blue-400 font-bold text-lg transition-colors py-4 flex items-center gap-2 border-b-2 border-white/40 hover:border-blue-400 drop-shadow-md"
             >
               Explore Markets
             </a>
           </div>
         </div>
 
-        {/* Simple Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce opacity-70">
-          <div className="w-1 h-12 bg-white rounded-full"></div>
+        {/* Centered Slider Indicators - Moved up to avoid stats bar overlap */}
+        <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-20 flex gap-4">
+          {coverageImages.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentImage(idx)}
+              className={`h-1.5 transition-all duration-700 rounded-full ${
+                idx === currentImage
+                  ? "w-12 bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.9)]"
+                  : "w-6 bg-white/40 hover:bg-white/60"
+              }`}
+            />
+          ))}
+        </div>
+
+        {/* Scroll Indicator - Moved up */}
+        <div className="absolute bottom-40 left-1/2 -translate-x-1/2 animate-bounce opacity-50 z-20">
+          <div className="w-1 h-8 bg-white/50 rounded-full"></div>
         </div>
       </div>
 
-      {/* Modern Stats Section - Glassmorphism */}
+      {/* Modern Stats Section - Executive Glassmorphism (35% Transparent) */}
       <div
         id="regions"
-        className="relative z-20 -mt-24 container mx-auto px-4 max-w-6xl"
+        className="relative z-20 container mx-auto px-4 max-w-6xl py-12"
       >
-        <div className="bg-white/90 backdrop-blur-xl rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.1)] border border-white/50 flex flex-col md:flex-row items-stretch overflow-hidden">
-          <div className="flex-1 p-10 flex flex-col items-center justify-center text-center group border-b md:border-b-0 md:border-r border-slate-100 hover:bg-white transition-colors duration-500">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl flex items-center justify-center text-blue-600 mb-5 group-hover:scale-110 transition-transform duration-500 shadow-inner">
+        <div className="bg-white/35 backdrop-blur-2xl rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-white/40 flex flex-col md:flex-row items-stretch overflow-hidden">
+          <div className="flex-1 p-10 flex flex-col items-center justify-center text-center group border-b md:border-b-0 md:border-r border-white/20 hover:bg-white/10 transition-colors duration-500">
+            <div className="w-16 h-16 bg-blue-600/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-blue-600 mb-5 group-hover:scale-110 transition-transform duration-500 shadow-lg">
               <FaGlobeEurope className="text-3xl" />
             </div>
-            <div className="text-5xl font-black text-slate-900 mb-2 tabular-nums tracking-tight">
+            <div className="text-5xl font-black text-slate-900 mb-2 tabular-nums tracking-tight drop-shadow-sm">
               50+
             </div>
-            <div className="text-slate-500 font-bold uppercase tracking-[0.2em] text-[11px]">
+            <div className="text-slate-800 font-extrabold uppercase tracking-[0.2em] text-[11px]">
               Countries Served
             </div>
           </div>
 
-          <div className="flex-1 p-10 flex flex-col items-center justify-center text-center group border-b md:border-b-0 md:border-r border-slate-100 hover:bg-white transition-colors duration-500">
-            <div className="w-16 h-16 bg-gradient-to-br from-teal-50 to-teal-100 rounded-2xl flex items-center justify-center text-teal-600 mb-5 group-hover:scale-110 transition-transform duration-500 shadow-inner">
+          <div className="flex-1 p-10 flex flex-col items-center justify-center text-center group border-b md:border-b-0 md:border-r border-white/20 hover:bg-white/10 transition-colors duration-500">
+            <div className="w-16 h-16 bg-teal-600/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-teal-600 mb-5 group-hover:scale-110 transition-transform duration-500 shadow-lg">
               <FaClock className="text-3xl" />
             </div>
-            <div className="text-5xl font-black text-slate-900 mb-2 tabular-nums tracking-tight">
+            <div className="text-5xl font-black text-slate-900 mb-2 tabular-nums tracking-tight drop-shadow-sm">
               24/7
             </div>
-            <div className="text-slate-500 font-bold uppercase tracking-[0.2em] text-[11px]">
+            <div className="text-slate-800 font-extrabold uppercase tracking-[0.2em] text-[11px]">
               Expert Support
             </div>
           </div>
 
-          <div className="flex-1 p-10 flex flex-col items-center justify-center text-center group hover:bg-white transition-colors duration-500">
-            <div className="w-16 h-16 bg-gradient-to-br from-emerald-50 to-emerald-100 rounded-2xl flex items-center justify-center text-emerald-600 mb-5 group-hover:scale-110 transition-transform duration-500 shadow-inner">
+          <div className="flex-1 p-10 flex flex-col items-center justify-center text-center group hover:bg-white/10 transition-colors duration-500">
+            <div className="w-16 h-16 bg-emerald-600/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-emerald-600 mb-5 group-hover:scale-110 transition-transform duration-500 shadow-lg">
               <FaCheckCircle className="text-3xl" />
             </div>
-            <div className="text-5xl font-black text-slate-900 mb-2 tabular-nums tracking-tight">
+            <div className="text-5xl font-black text-slate-900 mb-2 tabular-nums tracking-tight drop-shadow-sm">
               100%
             </div>
-            <div className="text-slate-500 font-bold uppercase tracking-[0.2em] text-[11px]">
+            <div className="text-slate-800 font-extrabold uppercase tracking-[0.2em] text-[11px]">
               Compliance Accuracy
             </div>
           </div>

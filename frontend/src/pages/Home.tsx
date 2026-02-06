@@ -138,7 +138,7 @@ const Home = () => {
 
       {/* Global Coverage - 3D Cards */}
       <section className="py-24 relative text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/assets/images/global_coverage_map.png')] bg-cover bg-center fixed-bg opacity-30"></div>
+        <div className="absolute inset-0 bg-[url('/assets/images/global_map_v2.jpg')] bg-cover bg-center fixed-bg opacity-30"></div>
         <div className="absolute inset-0 bg-slate-900/90"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center mb-16">
@@ -169,7 +169,7 @@ const Home = () => {
 
       {/* Why Choose Us */}
       <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/assets/images/1557804506-669a67965ba0.jpg')] bg-cover bg-center"></div>
+        <div className="absolute inset-0 bg-[url('/assets/images/quality_bg_v2.jpg')] bg-cover bg-center"></div>
         <div className="absolute inset-0 bg-slate-900/90"></div>
         <div className="container mx-auto px-4 relative z-10">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-16 text-white">
@@ -276,7 +276,7 @@ const Home = () => {
 
       {/* CTA Banner */}
       <section className="py-20 relative text-white text-center overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/assets/images/1522071820081-009f0129c71c.jpg')] bg-cover bg-center"></div>
+        <div className="absolute inset-0 bg-[url('/assets/images/quality_bg_v2.jpg')] bg-cover bg-center"></div>
         <div className="absolute inset-0 bg-blue-900/90 mix-blend-multiply"></div>
         <div className="container mx-auto px-4 relative z-10">
           <h2 className="text-4xl font-bold mb-6">

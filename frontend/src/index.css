@@ -195,6 +195,22 @@
   image-rendering: -webkit-optimize-contrast; /* Crisper flags */
 }
 
+/* HIGH VISIBILITY NEPAL FLAG OVERRIDE */
+.react-tel-input .flag.np {
+  background-image: url("https://flagcdn.com/np.svg") !important;
+  background-position: center !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  width: 14px !important;
+  height: 14px !important;
+  background-color: transparent !important;
+  display: inline-block !important;
+  position: relative !important;
+  top: -1px !important; /* Center-balanced with dialing code */
+  transform: none !important;
+  margin-right: 8px !important;
+}
+
 .react-tel-input .selected-flag {
   padding-left: 12px !important;
   display: flex !important;

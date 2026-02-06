@@ -11,7 +11,7 @@ const About = () => {
     <div className="bg-white min-h-screen font-sans">
       {/* Hero Section */}
       <div className="relative py-24 bg-slate-900 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/assets/images/1556761175-5973dc0f32e7.jpg')] bg-cover bg-center opacity-20"></div>
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1533929736458-ca588d08c8be?q=100&w=3840')] bg-cover bg-center opacity-20"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-slate-900/40"></div>
         <div className="container mx-auto px-4 relative z-10 text-center">
           <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">
@@ -32,9 +32,9 @@ const About = () => {
               <div className="relative">
                 <div className="absolute -inset-4 bg-blue-100 rounded-xl transform rotate-3"></div>
                 <img
-                  src="/assets/images/1600880292203-757bb62b4baf.jpg"
-                  alt="Corporate Meeting"
-                  className="relative rounded-lg shadow-2xl w-full"
+                  src="https://images.unsplash.com/photo-1522083165195-3424ed129620?q=100&w=3840"
+                  alt="The Shard, London"
+                  className="relative rounded-lg shadow-2xl w-full h-[400px] object-cover"
                 />
               </div>
             </div>

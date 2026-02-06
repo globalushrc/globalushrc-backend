@@ -52,6 +52,7 @@ const BookConsultation = () => {
   const [monthStats, setMonthStats] = useState<{ [date: string]: number }>({});
   const [isPremium, setIsPremium] = useState(false);
   const [lastBooking, setLastBooking] = useState<any>(null);
+  const [userCountry, setUserCountry] = useState("np"); // Default to Nepal
 
   const fetchMonthStats = async (year: number, month: number) => {
     try {
@@ -100,6 +101,25 @@ const BookConsultation = () => {
       triggerDownload();
     }
   }, [showSuccess, lastBooking]);
+
+  // Auto-detect User Country for Phone Input
+  useEffect(() => {
+    const detectCountry = async () => {
+      try {
+        const response = await fetch("https://ipapi.co/json/");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.country_code) {
+            setUserCountry(data.country_code.toLowerCase());
+          }
+        }
+      } catch (error) {
+        console.error("Country Detection Error:", error);
+        // Fallback is already 'np'
+      }
+    };
+    detectCountry();
+  }, []);
 
   const services = [
     "Visa Consultation",
@@ -259,6 +279,7 @@ const BookConsultation = () => {
         setLastBooking({
           ...formData,
           referenceId: `REF-${data.consultationId}`,
+          isPremium,
         });
         setShowSuccess(true);
         resetForm();
@@ -309,7 +330,11 @@ const BookConsultation = () => {
       );
 
       if (response.ok) {
-        setLastBooking({ ...formData, referenceId: `REF-${consultationId}` });
+        setLastBooking({
+          ...formData,
+          referenceId: `REF-${consultationId}`,
+          isPremium,
+        });
         setShowSuccess(true);
         resetForm();
       } else {
@@ -371,7 +396,7 @@ const BookConsultation = () => {
       // Close the success section after a small delay to let the user see the "Downloaded" state
       setTimeout(() => {
         setShowSuccess(false);
-      }, 2000);
+      }, 3000);
     } catch (error: any) {
       console.error("PDF Generation Error:", error);
       alert(
@@ -432,33 +457,44 @@ const BookConsultation = () => {
               />
             </div>
             <div>
-              <p style={{ fontWeight: "700", fontSize: "18px", margin: "0" }}>
+              <p
+                style={{
+                  fontWeight: "800",
+                  fontSize: "19px",
+                  margin: "0",
+                  letterSpacing: "-0.02em",
+                }}
+              >
                 Booking Confirmed!
               </p>
-              <p
+              <div
                 style={{
-                  fontSize: "14px",
-                  margin: "4px 0 0 0",
-                  opacity: "0.9",
+                  fontSize: "13px",
+                  margin: "6px 0 0 0",
+                  opacity: "0.95",
+                  backgroundColor: "rgba(0,0,0,0.2)",
+                  padding: "4px 12px",
+                  borderRadius: "8px",
+                  display: "inline-block",
+                  fontFamily: "monospace",
+                  fontWeight: "900",
                 }}
               >
-                Ref:{" "}
-                <span style={{ fontFamily: "monospace", fontWeight: "700" }}>
-                  {lastBooking?.referenceId}
-                </span>
-              </p>
+                Ref: {lastBooking?.referenceId}
+              </div>
               <p
                 style={{
-                  fontSize: "12px",
-                  margin: "8px 0 0 0",
+                  fontSize: "11px",
+                  margin: "10px 0 0 0",
                   display: "flex",
                   alignItems: "center",
-                  gap: "4px",
+                  gap: "6px",
                   opacity: "0.8",
+                  fontWeight: "600",
                 }}
               >
-                <FaFileDownload className="animate-pulse" /> Automatically
-                preparing your letter...
+                <FaFileDownload className="animate-pulse" /> Generating your
+                confirmation...
               </p>
             </div>
           </div>
@@ -570,7 +606,7 @@ const BookConsultation = () => {
                     <FaPhone className="text-blue-600" /> Phone *
                   </label>
                   <PhoneInput
-                    country={"np"}
+                    country={userCountry}
                     value={formData.phone}
                     onChange={(phone) =>
                       setFormData({ ...formData, phone: "+" + phone })
@@ -583,7 +619,7 @@ const BookConsultation = () => {
                     inputClass="!w-full !px-5 !py-3.5 !pl-14 !h-[54px] !rounded-xl !border !border-slate-200 !focus:border-blue-500 !focus:ring-4 !focus:ring-blue-500/5 !outline-none !transition-all !bg-slate-50/30 !focus:bg-white !text-base"
                     buttonClass="!border !border-slate-200 !border-r-0 !bg-slate-50/50 !rounded-l-xl !px-3"
                     dropdownClass="!rounded-xl !shadow-2xl !border-slate-100 !mt-2"
-                    placeholder="+977 98XXXXXXX"
+                    placeholder={`+... 0000000000`}
                   />
                 </div>
                 <div>
@@ -626,189 +662,248 @@ const BookConsultation = () => {
                     />
                   </div>
 
-                  {/* Right Side: Stats (Redesigned - 80% Scale & Developer Colors) */}
-                  <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 h-full flex flex-col shadow-sm scale-95 origin-top">
-                    <div className="text-center pb-3 mb-3 border-b border-slate-200">
-                      <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-slate-400">
-                        Date Statistics
-                      </span>
+                  {/* Right Side: Stats (Matches Photoshop Exact) */}
+                  {/* Right Side: Premium Data Dashboard */}
+                  <div className="bg-white/40 backdrop-blur-md border border-white/20 rounded-3xl p-6 h-full flex flex-col shadow-[0_8px_32px_0_rgba(31,38,135,0.07)]">
+                    <div className="flex items-center justify-between mb-6">
+                      <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">
+                        Date Analytics
+                      </h3>
+                      <div className="flex gap-1">
+                        <div className="w-1 h-1 rounded-full bg-blue-400"></div>
+                        <div className="w-1 h-1 rounded-full bg-emerald-400"></div>
+                      </div>
                     </div>
 
                     {availability?.available ? (
-                      <div className="flex-grow space-y-4 flex flex-col justify-center">
-                        <div className="flex items-center justify-between group">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-7 bg-emerald-500 rounded-full"></div>
-                            <span className="text-sm font-bold text-slate-700">
-                              Available
+                      <div className="flex-grow flex flex-col justify-center space-y-6">
+                        {/* Progressive Stat: Available */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-end">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                              Available Slots
+                            </span>
+                            <span className="text-lg font-black text-emerald-600">
+                              {
+                                availability.slots.filter(
+                                  (s: any) => s.available,
+                                ).length
+                              }
                             </span>
                           </div>
-                          <span className="text-xl font-black text-emerald-600 tabular-nums">
-                            {
-                              availability.slots.filter((s: any) => s.available)
-                                .length
-                            }
-                          </span>
+                          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-emerald-500 rounded-full transition-all duration-1000"
+                              style={{
+                                width: `${(availability.slots.filter((s: any) => s.available).length / 28) * 100}%`,
+                              }}
+                            ></div>
+                          </div>
                         </div>
 
-                        <div className="flex items-center justify-between group">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-7 bg-rose-500 rounded-full"></div>
-                            <span className="text-sm font-bold text-slate-700">
-                              Booked
+                        {/* Progressive Stat: Booked */}
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-end">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-tight">
+                              Confirmed Bookings
+                            </span>
+                            <span className="text-lg font-black text-rose-500">
+                              {availability.slots.reduce(
+                                (acc: number, s: any) =>
+                                  acc + (s.bookedCount || 0),
+                                0,
+                              )}
                             </span>
                           </div>
-                          <span className="text-xl font-black text-rose-600 tabular-nums">
-                            {availability.slots.reduce(
-                              (acc: number, s: any) =>
-                                acc + (s.bookedCount || 0),
-                              0,
-                            )}
-                          </span>
+                          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-rose-500 rounded-full transition-all duration-1000"
+                              style={{
+                                width: `${(availability.slots.reduce((acc: number, s: any) => acc + (s.bookedCount || 0), 0) / 28) * 100}%`,
+                              }}
+                            ></div>
+                          </div>
                         </div>
 
-                        <div className="flex items-center justify-between group border-t border-slate-200/50 pt-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-7 bg-slate-400 rounded-full"></div>
-                            <span className="text-sm font-bold text-slate-700">
-                              Capacity
+                        {/* Capacity Info */}
+                        <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
+                          <div className="flex flex-col">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase">
+                              Total Capacity
+                            </span>
+                            <span className="text-sm font-black text-slate-700 uppercase tracking-tighter">
+                              28 Slots
                             </span>
                           </div>
-                          <span className="text-xl font-black text-slate-500 tabular-nums">
-                            28
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between group">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-7 bg-blue-500 rounded-full"></div>
-                            <span className="text-sm font-bold text-slate-700">
-                              Remaining
-                            </span>
+                          <div className="px-3 py-1 bg-blue-50 text-blue-600 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                            Live
                           </div>
-                          <span className="text-xl font-black text-blue-600 tabular-nums">
-                            {Math.max(
-                              0,
-                              28 -
-                                availability.slots.reduce(
-                                  (acc: number, s: any) =>
-                                    acc + (s.bookedCount || 0),
-                                  0,
-                                ),
-                            )}
-                          </span>
                         </div>
                       </div>
                     ) : loadingAvailability ? (
-                      <div className="flex-grow flex items-center justify-center py-6">
-                        <div className="w-5 h-5 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+                      <div className="flex-grow flex flex-col items-center justify-center space-y-3">
+                        <div className="w-8 h-8 border-2 border-blue-500/10 border-t-blue-500 rounded-full animate-spin"></div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          Analyzing...
+                        </span>
                       </div>
                     ) : (
-                      <div className="flex-grow flex items-center justify-center text-center py-6">
-                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                          Select Date
-                        </p>
+                      <div className="flex-grow flex items-center justify-center">
+                        <div className="text-center p-4 border border-dashed border-slate-200 rounded-2xl">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">
+                            Pick a date to <br /> see real-time data
+                          </p>
+                        </div>
                       </div>
                     )}
 
-                    <div className="mt-auto pt-4 border-t border-slate-200">
-                      <p className="text-[8px] text-slate-400 leading-tight italic">
-                        * Real-time availability for{" "}
-                        {formData.date || "selected date"}
+                    <div className="mt-6 pt-4 border-t border-slate-100">
+                      <p className="text-[8px] text-slate-300 font-medium tracking-tight">
+                        * AG-SYNC PROTOCOL v2.4 •{" "}
+                        {formData.date || "NO_DATE_REF"}
                       </p>
                     </div>
                   </div>
                 </div>
-
                 {availability?.available && (
-                  <div className="mt-4">
-                    <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
-                      <FaClock className="text-blue-600" /> Available Slots *
-                    </label>
-                    <div className="mt-4 border border-slate-200 rounded-2xl overflow-hidden bg-white shadow-sm">
-                      {/* Table Header */}
-                      <div className="grid grid-cols-[100px_1fr_1fr] bg-slate-50 border-b border-slate-200 text-center items-center py-4 px-2">
-                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                          Time
+                  <div className="mt-12 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                      <div>
+                        <h4 className="text-sm font-black text-[#001f3f] uppercase tracking-[0.2em] flex items-center gap-2">
+                          <FaClock className="text-blue-600" /> Appointment
+                          Schedule
+                        </h4>
+                        <p className="text-[10px] text-slate-400 font-medium mt-1">
+                          Select your preferred window for consultation
+                        </p>
+                      </div>
+                      <div className="flex gap-6 items-center bg-slate-50/80 backdrop-blur-sm px-4 py-2 rounded-full border border-slate-100">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#9cf39c] shadow-sm"></span>
+                          <span className="text-[9px] uppercase font-black text-slate-500 tracking-wider">
+                            Available
+                          </span>
                         </div>
-                        <div className="px-2">
-                          <div className="text-[11px] font-bold text-slate-800">
-                            Standard
-                          </div>
-                          <div className="text-[8px] text-slate-400 font-medium">
-                            Within usual hours • $50
-                          </div>
-                        </div>
-                        <div className="px-2">
-                          <div className="text-[11px] font-bold text-blue-600 flex items-center justify-center gap-1">
-                            <FaShieldAlt className="text-[10px]" /> Prime Time
-                          </div>
-                          <div className="text-[8px] text-blue-400 font-medium italic">
-                            Urgent / Priority • $100
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#001f3f] shadow-[0_0_8px_rgba(0,31,63,0.3)]"></span>
+                          <span className="text-[9px] uppercase font-black text-slate-500 tracking-wider">
+                            Selected
+                          </span>
                         </div>
                       </div>
+                    </div>
 
-                      {/* Table Body - Scrollable Area */}
-                      <div className="max-h-[500px] overflow-y-auto divide-y divide-slate-100">
-                        {availability.slots.map((slot: any) => (
-                          <div
-                            key={slot.time}
-                            className="grid grid-cols-[100px_1fr_1fr] items-center hover:bg-slate-50/50 transition-colors"
-                          >
-                            {/* Time Column */}
-                            <div className="py-4 px-4 text-center border-r border-slate-100">
-                              <span className="text-sm font-black text-slate-700">
-                                {slot.time.split(" ")[0]}
-                              </span>
-                              <span className="block text-[8px] text-slate-400 font-bold uppercase">
-                                {slot.time.split(" ")[1]}
-                              </span>
-                            </div>
-
-                            {/* Standard Column */}
-                            <div className="p-3 flex justify-center border-r border-slate-100">
-                              <button
-                                type="button"
-                                disabled={!slot.available}
-                                onClick={() => {
-                                  setIsPremium(false);
-                                  selectTime(slot.time, slot.available);
-                                }}
-                                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all w-full max-w-[100px] border ${
-                                  formData.time === slot.time && !isPremium
-                                    ? "bg-blue-600 text-white border-blue-600 shadow-md"
-                                    : slot.available
-                                      ? "bg-white text-blue-600 border-blue-200 hover:border-blue-500 hover:bg-blue-50"
-                                      : "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-50"
-                                }`}
-                              >
-                                {slot.available ? "Select" : "Full"}
-                              </button>
-                            </div>
-
-                            {/* Premium / Prime Time Column */}
-                            <div className="p-3 flex justify-center">
-                              <button
-                                type="button"
-                                disabled={!slot.available}
-                                onClick={() => {
-                                  setIsPremium(true);
-                                  selectTime(slot.time, slot.available);
-                                }}
-                                className={`px-4 py-2 rounded-lg text-xs font-bold transition-all w-full max-w-[100px] border ${
-                                  formData.time === slot.time && isPremium
-                                    ? "bg-indigo-600 text-white border-indigo-600 shadow-md"
-                                    : slot.available
-                                      ? "bg-white text-indigo-600 border-indigo-100 hover:border-indigo-400 hover:bg-indigo-50"
-                                      : "bg-slate-50 text-slate-300 border-slate-100 cursor-not-allowed opacity-50"
-                                }`}
-                              >
-                                {slot.available ? "Select" : "Full"}
-                              </button>
-                            </div>
+                    {/* Booking Type Toggle (Premium Design) */}
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                      <button
+                        type="button"
+                        onClick={() => setIsPremium(false)}
+                        className={`group relative overflow-hidden flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 ${
+                          !isPremium
+                            ? "bg-[#001f3f] border-[#001f3f] text-white shadow-xl shadow-blue-900/10"
+                            : "bg-white border-slate-200 text-slate-500 hover:border-blue-200 hover:bg-blue-50/30"
+                        }`}
+                      >
+                        <span className="text-xs font-black uppercase tracking-widest mb-1">
+                          Standard
+                        </span>
+                        <span
+                          className={`text-[10px] font-medium transition-colors ${!isPremium ? "text-blue-100" : "text-slate-400"}`}
+                        >
+                          $50 - Regular Access
+                        </span>
+                        {!isPremium && (
+                          <div className="absolute top-0 right-0 p-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse"></div>
                           </div>
-                        ))}
+                        )}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setIsPremium(true)}
+                        className={`group relative overflow-hidden flex flex-col items-center justify-center p-4 rounded-2xl border transition-all duration-300 ${
+                          isPremium
+                            ? "bg-[#001f3f] border-[#001f3f] text-white shadow-xl shadow-blue-900/10"
+                            : "bg-white border-slate-200 text-slate-500 hover:border-amber-200 hover:bg-amber-50/30"
+                        }`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <FaShieldAlt
+                            className={
+                              isPremium
+                                ? "text-amber-400"
+                                : "group-hover:text-amber-500"
+                            }
+                          />
+                          <span className="text-xs font-black uppercase tracking-widest">
+                            Prime
+                          </span>
+                        </div>
+                        <span
+                          className={`text-[10px] font-medium transition-colors ${isPremium ? "text-amber-400" : "text-slate-400"}`}
+                        >
+                          $100 - Priority Access
+                        </span>
+                        {isPremium && (
+                          <div className="absolute top-0 right-0 p-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></div>
+                          </div>
+                        )}
+                      </button>
+                    </div>
+
+                    {/* Solid Green Box Grid */}
+                    <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-2">
+                      {availability.slots.map((slot: any) => (
+                        <button
+                          key={slot.time}
+                          type="button"
+                          disabled={!slot.available}
+                          onClick={() => selectTime(slot.time, slot.available)}
+                          className={`
+                            relative py-2 px-1 rounded-sm border font-bold text-[11px] transition-all duration-200
+                            ${
+                              !slot.available
+                                ? "bg-red-500 border-red-500 text-white cursor-not-allowed opacity-50"
+                                : formData.time === slot.time
+                                  ? "bg-[#001f3f] border-[#001f3f] text-white shadow-md scale-105 z-10"
+                                  : "bg-[#9cf39c] border-[#9cf39c] text-slate-800 hover:brightness-95"
+                            }
+                          `}
+                        >
+                          {(() => {
+                            const [time, modifier] = slot.time.split(" ");
+                            let [hours, minutes] = time.split(":");
+                            if (modifier === "PM" && hours !== "12")
+                              hours = (parseInt(hours, 10) + 12).toString();
+                            if (modifier === "AM" && hours === "12")
+                              hours = "00";
+                            return (
+                              <span>{`${hours.padStart(2, "0")}:${minutes}`}</span>
+                            );
+                          })()}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Refined Footer Context */}
+                    <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center border border-blue-100 shadow-sm">
+                          <FaShieldAlt className="text-blue-600 text-[12px]" />
+                        </div>
+                        <p className="text-[11px] font-black text-slate-700 uppercase tracking-widest">
+                          Secure Booking Infrastructure
+                        </p>
+                      </div>
+                      <div className="flex flex-col items-center sm:items-end gap-1">
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                          Authenticated Session
+                        </p>
+                        <p className="text-[9px] text-slate-400 font-medium uppercase tracking-tighter">
+                          Local Time UTC+5:45
+                        </p>
                       </div>
                     </div>
                   </div>

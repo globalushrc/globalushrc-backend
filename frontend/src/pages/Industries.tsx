@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaLaptopCode,
   FaRocket,
@@ -11,7 +13,28 @@ import {
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
+const industryImages = [
+  "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?q=100&w=3840", // Liverpool (Tech)
+  "https://images.unsplash.com/photo-1541003365608-f327299a9971?q=100&w=3840", // Cambridge (Startups)
+  "https://images.unsplash.com/photo-1549421263-5494883f05f4?q=100&w=3840", // Sheffield (Manufacturing)
+  "https://images.unsplash.com/photo-1491557345352-5929e343eb89?q=100&w=3840", // Bath Abbey (Healthcare/Wellness)
+  "https://images.unsplash.com/photo-1560969184-10fe8719e047?q=100&w=3840", // Berlin (Logistics)
+  "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?q=100&w=3840", // Dubai (Finance)
+  "https://images.unsplash.com/photo-1526131399667-5316739344c3?q=100&w=3840", // London Retail
+  "https://images.unsplash.com/photo-1533929736458-ca588d08c8be?q=100&w=3840", // Education (Landmark)
+  "https://images.unsplash.com/photo-1467269204594-9661b134dd2b?q=100&w=3840", // Green Energy (Cotswolds)
+  "https://images.unsplash.com/photo-1517733325601-499c887bd901?q=100&w=3840", // Corporate (Canary Wharf)
+];
+
 const Industries = () => {
+  const [currentImage, setCurrentImage] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImage((prev) => (prev + 1) % industryImages.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
   const industries = [
     {
       name: "Technology & SaaS",
@@ -110,18 +133,58 @@ const Industries = () => {
 
   return (
     <div className="bg-white min-h-screen font-sans">
-      {/* Hero Section */}
-      <div className="relative py-32 bg-slate-900 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/assets/images/1497366216548-37526070297c.jpg')] bg-cover bg-center opacity-30 fixed-bg"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-900/40 to-slate-900"></div>
+      {/* Hero Section - Clean HD Slider */}
+      <div className="relative py-32 md:py-48 bg-slate-950 text-white overflow-hidden">
+        {/* Background Images */}
+        <div className="absolute inset-0 z-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentImage}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: `url('${industryImages[currentImage]}')`,
+              }}
+            />
+          </AnimatePresence>
+
+          {/* Refined Overlays for Clarity */}
+          <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/30 to-transparent"></div>
+          <div className="absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/50 to-transparent"></div>
+        </div>
+
         <div className="container mx-auto px-4 relative z-10 text-center">
-          <h1 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight">
-            Industries We Serve
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
-            Tailored HR strategy and compliance mapping for diverse global
-            sectors.
-          </p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1 }}
+          >
+            <h1 className="text-5xl md:text-8xl font-black mb-8 tracking-tighter drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)]">
+              Industries We Serve
+            </h1>
+            <p className="text-xl md:text-3xl text-white font-semibold max-w-4xl mx-auto leading-relaxed drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+              Tailored HR strategy and compliance mapping for diverse global
+              sectors.
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Centered Slider Indicators - Moved up for balance */}
+        <div className="absolute bottom-16 md:bottom-24 left-1/2 -translate-x-1/2 z-20 flex gap-3">
+          {industryImages.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentImage(idx)}
+              className={`h-1.5 transition-all duration-700 rounded-full ${
+                idx === currentImage
+                  ? "w-12 bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)]"
+                  : "w-6 bg-white/40 hover:bg-white/60"
+              }`}
+            />
+          ))}
         </div>
       </div>
 

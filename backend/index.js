@@ -461,7 +461,6 @@ const generateStandardTimeSlots = () => {
   return slots;
 };
 
-
 // Check Availability Endpoint with validation
 app.get(
   "/api/consultations/availability",
@@ -750,7 +749,7 @@ app.post(
     .isLength({ min: 10 })
     .withMessage("Message must be at least 10 characters long"),
   handleValidationErrors,
-  (req, res) => {
+  async (req, res) => {
     try {
       const { name, email, phone, subject, message, location } = req.body;
 
@@ -854,19 +853,19 @@ app.get("/api/submissions", authenticateToken, async (req, res) => {
 app.post("/api/submissions/delete", authenticateToken, async (req, res) => {
   try {
     const { id } = req.body;
-    // Assuming 'id' is the MongoDB _id (string) or the old 'id' (number). 
-    // If migrating, better to handle both or assume standard _id if frontend sends it. 
-    // For now, let's assume we might receive either. 
+    // Assuming 'id' is the MongoDB _id (string) or the old 'id' (number).
+    // If migrating, better to handle both or assume standard _id if frontend sends it.
+    // For now, let's assume we might receive either.
     // However, Mongoose deletion by _id is usually cleaner.
     // If the frontend sends the whole object or just ID.
     // Let's try to delete by _id first, if not valid ObjectId, try custom id.
-    
+
     // Simplification: The new frontend will likely use _id.
     // But if we want to support legacy IDs (which we probably don't have many of), we can check.
-    // Since we are MIGRATING, we accept new IDs. 
-    
+    // Since we are MIGRATING, we accept new IDs.
+
     await Submission.findByIdAndDelete(id);
-    
+
     logger.info("Submission deleted", { id });
     res.status(200).json({ message: "Submission deleted successfully" });
   } catch (err) {
@@ -1242,7 +1241,7 @@ app.get("/api/news", async (req, res) => {
     const news = await News.find().sort({ createdAt: -1 });
     res.json(news);
   } catch (err) {
-     res.status(500).json({ error: "Failed to fetch news" });
+    res.status(500).json({ error: "Failed to fetch news" });
   }
 });
 
@@ -1286,7 +1285,7 @@ app.post(
 app.post("/api/news/delete", authenticateToken, async (req, res) => {
   try {
     const { id, filename } = req.body;
-    
+
     await News.findByIdAndDelete(id);
 
     // Optional: Delete file from uploads
@@ -1353,7 +1352,7 @@ app.post("/api/notices/delete", authenticateToken, async (req, res) => {
   try {
     const { id } = req.body;
     await Notice.findByIdAndDelete(id);
-    
+
     logger.info("Notice deleted", { id });
     res.json({ message: "Notice deleted successfully" });
   } catch (err) {
