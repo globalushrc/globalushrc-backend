@@ -42,7 +42,7 @@ services:
     env: static
     region: singapore
     buildCommand: npm install && npm run build
-    publishPath: ./dist
+    publishPath: ./frontend/dist
     envVars:
       - key: VITE_API_URL
         fromService:
