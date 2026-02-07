@@ -6,12 +6,15 @@ import {
   FaChevronDown,
   FaChevronUp,
   FaQuestionCircle,
+  FaMoneyBillWave,
 } from "react-icons/fa";
 import CurrencyConverter from "../components/CurrencyConverter";
+import MarketRates from "../components/MarketRates";
 
 const Resources = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [news, setNews] = useState<any[]>([]);
+  const [bankRates, setBankRates] = useState<any[]>([]);
 
   // Fetch News from Backend
   useEffect(() => {
@@ -35,6 +38,16 @@ const Resources = () => {
       }
     };
     fetchNews();
+
+    const fetchBankRates = async () => {
+      try {
+        const res = await fetch(`${getApiUrl()}/api/bank-rates`);
+        if (res.ok) setBankRates(await res.json());
+      } catch (err) {
+        console.error("Bank rates error", err);
+      }
+    };
+    fetchBankRates();
   }, []);
 
   const getApiUrl = () => {
@@ -196,6 +209,52 @@ const Resources = () => {
 
             {/* Sidebar */}
             <div className="lg:w-1/3 space-y-8">
+              {/* Live Market Rates */}
+              <MarketRates />
+
+              {/* Official Bank Rates */}
+              {bankRates.length > 0 && (
+                <div className="bg-white p-6 rounded-2xl shadow-md border border-amber-100 overflow-hidden relative group">
+                  <div className="absolute top-0 right-0 p-4 opacity-10">
+                    <FaMoneyBillWave className="text-6xl text-amber-600" />
+                  </div>
+                  <h3 className="text-lg font-black text-slate-800 uppercase tracking-wider mb-4 flex items-center gap-2">
+                    <FaMoneyBillWave className="text-amber-600" /> Official
+                    Forex Rates
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-4 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-gray-50 pb-2">
+                      <span>Currency</span>
+                      <span className="text-center">Unit</span>
+                      <span className="text-right">Buy</span>
+                      <span className="text-right">Sell</span>
+                    </div>
+                    {bankRates.map((rate) => (
+                      <div
+                        key={rate.currency}
+                        className="grid grid-cols-4 items-center py-2 border-b border-gray-50 last:border-0"
+                      >
+                        <span className="font-bold text-slate-700">
+                          {rate.currency}
+                        </span>
+                        <span className="text-center text-xs text-slate-500">
+                          {rate.unit}
+                        </span>
+                        <span className="text-right text-xs font-bold text-emerald-600">
+                          {rate.buy}
+                        </span>
+                        <span className="text-right text-xs font-bold text-rose-600">
+                          {rate.sell}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-[10px] text-slate-400 font-bold italic mt-4">
+                    * Rates pushed manually by bank administrator
+                  </p>
+                </div>
+              )}
+
               {/* Live Currency Exchanger */}
               <CurrencyConverter />
 

@@ -20,6 +20,8 @@ const Consultation = require("./models/Consultation");
 const Submission = require("./models/Submission");
 const News = require("./models/News");
 const Notice = require("./models/Notice");
+const BankRate = require("./models/BankRate");
+const Job = require("./models/Job");
 const mongoose = require("mongoose");
 
 // Connect to MongoDB
@@ -1358,6 +1360,125 @@ app.post("/api/notices/delete", authenticateToken, async (req, res) => {
   } catch (err) {
     logger.error("Notice deletion error", { error: err.message });
     res.status(500).json({ error: "Failed to delete notice" });
+  }
+});
+
+// --- Official Bank Rates Feature ---
+// GET Published Bank Rates (Public)
+app.get("/api/bank-rates", async (req, res) => {
+  try {
+    const rates = await BankRate.find({ isPublished: true }).sort({
+      currency: 1,
+    });
+    res.json(rates);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch bank rates" });
+  }
+});
+
+// GET All Bank Rates (Admin)
+app.get("/api/admin/bank-rates", authenticateToken, async (req, res) => {
+  try {
+    const rates = await BankRate.find().sort({ currency: 1 });
+    res.json(rates);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch all bank rates" });
+  }
+});
+
+// POST/Update Bank Rate (Admin)
+app.post("/api/admin/bank-rates", authenticateToken, async (req, res) => {
+  try {
+    const { currency, symbol, unit, buy, sell, isPublished } = req.body;
+    const rate = await BankRate.findOneAndUpdate(
+      { currency },
+      { symbol, unit, buy, sell, isPublished, lastUpdated: Date.now() },
+      { upsert: true, new: true },
+    );
+    logger.info("Bank rate updated", { currency, isPublished });
+    res.json(rate);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update bank rate" });
+  }
+});
+
+// --- Job Bank Feature ---
+// GET Published Jobs (Public)
+app.get("/api/jobs", async (req, res) => {
+  try {
+    const jobs = await Job.find({ isPublished: true }).sort({ datePosted: -1 });
+    res.json(jobs);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch jobs" });
+  }
+});
+
+// GET All Jobs (Admin)
+app.get("/api/admin/jobs", authenticateToken, async (req, res) => {
+  try {
+    const jobs = await Job.find().sort({ datePosted: -1 });
+    res.json(jobs);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch all jobs" });
+  }
+});
+
+// POST Create/Update Job (Admin)
+app.post("/api/admin/jobs", authenticateToken, async (req, res) => {
+  try {
+    const {
+      id,
+      title,
+      company,
+      location,
+      description,
+      salary,
+      requirements,
+      isPublished,
+    } = req.body;
+    let job;
+    if (id) {
+      job = await Job.findByIdAndUpdate(
+        id,
+        {
+          title,
+          company,
+          location,
+          description,
+          salary,
+          requirements,
+          isPublished,
+        },
+        { new: true },
+      );
+    } else {
+      job = new Job({
+        title,
+        company,
+        location,
+        description,
+        salary,
+        requirements,
+        isPublished,
+      });
+      await job.save();
+    }
+    logger.info("Job list updated", { title, isPublished });
+    res.json(job);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update job" });
+  }
+});
+
+// DELETE Job (Admin)
+app.post("/api/admin/jobs/delete", authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.body;
+    await Job.findByIdAndDelete(id);
+    logger.info("Job deleted", { id });
+    res.json({ message: "Job deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete job" });
   }
 });
 

@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
-import { FaMapMarkerAlt } from "react-icons/fa";
 
 const heroImages = [
   {
@@ -75,7 +74,8 @@ const Hero = () => {
           />
         </AnimatePresence>
 
-        {/* Location Badge */}
+        {/* Location Badge Removed per User Request */}
+        {/*
         <motion.div
           key={`label-${currentImage}`}
           initial={{ opacity: 0, x: 20 }}
@@ -88,6 +88,7 @@ const Hero = () => {
             {heroImages[currentImage].name}
           </span>
         </motion.div>
+        */}
 
         {/* Minimal Subtle Vignette for Legibility only at bottom/top */}
         <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/40 to-transparent"></div>

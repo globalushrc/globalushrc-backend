@@ -98,7 +98,7 @@ const ConsultantSection = () => {
             <div className="relative z-10 rounded-[2.5rem] overflow-hidden shadow-2xl border border-white/10 animate-float">
               <img
                 src="https://images.unsplash.com/photo-1543783207-ec64e4d95325?q=100&w=3840"
-                alt="Manchester Town Hall"
+                alt="Premium Consultation Center"
                 className="w-full h-auto object-cover"
               />
               {/* Overlay stats */}

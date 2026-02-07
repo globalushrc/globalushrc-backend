@@ -49,26 +49,9 @@ const BookConsultation = () => {
   const [consultationId, setConsultationId] = useState<number | null>(null);
   const [exchangeRate, setExchangeRate] = useState<number>(133); // Fallback to 133
   const [nprAmount, setNprAmount] = useState<number>(6650);
-  const [monthStats, setMonthStats] = useState<{ [date: string]: number }>({});
   const [isPremium, setIsPremium] = useState(false);
   const [lastBooking, setLastBooking] = useState<any>(null);
   const [userCountry, setUserCountry] = useState("np"); // Default to Nepal
-
-  const fetchMonthStats = async (year: number, month: number) => {
-    try {
-      const hostname = window.location.hostname;
-      const apiUrl = import.meta.env.VITE_API_URL || `http://${hostname}:5001`;
-      const response = await fetch(
-        `${apiUrl}/api/consultations/month-stats?year=${year}&month=${month}`,
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setMonthStats(data);
-      }
-    } catch (error) {
-      console.error("Month Stats Fetch Error:", error);
-    }
-  };
 
   // Fetch Live Rates
   useEffect(() => {
@@ -652,8 +635,6 @@ const BookConsultation = () => {
                   <div className="bg-white">
                     <Calendar
                       selectedDate={formData.date}
-                      availabilityMap={monthStats}
-                      onMonthChange={fetchMonthStats}
                       onDateSelect={(date) =>
                         handleDateChange({
                           target: { value: date, name: "date" },

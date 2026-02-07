@@ -33,7 +33,7 @@ const About = () => {
                 <div className="absolute -inset-4 bg-blue-100 rounded-xl transform rotate-3"></div>
                 <img
                   src="https://images.unsplash.com/photo-1522083165195-3424ed129620?q=100&w=3840"
-                  alt="The Shard, London"
+                  alt="Corporate Landmark"
                   className="relative rounded-lg shadow-2xl w-full h-[400px] object-cover"
                 />
               </div>

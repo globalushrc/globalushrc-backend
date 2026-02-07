@@ -719,7 +719,8 @@ const GlobalCoverage = () => {
             />
           </AnimatePresence>
 
-          {/* Location Badge */}
+          {/* Location Badge Removed per User Request */}
+          {/*
           <motion.div
             key={`label-${currentImage}`}
             initial={{ opacity: 0, x: 20 }}
@@ -732,6 +733,7 @@ const GlobalCoverage = () => {
               {coverageImages[currentImage].name}
             </span>
           </motion.div>
+          */}
 
           {/* Refined Overlays for Clarity */}
           <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-black/40 to-transparent"></div>

@@ -4,14 +4,14 @@ import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 interface CalendarProps {
   onDateSelect: (date: string) => void;
   selectedDate: string;
-  availabilityMap?: { [date: string]: number };
+
   onMonthChange?: (year: number, month: number) => void;
 }
 
 const Calendar: React.FC<CalendarProps> = ({
   onDateSelect,
   selectedDate,
-  availabilityMap = {},
+
   onMonthChange,
 }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -118,8 +118,6 @@ const Calendar: React.FC<CalendarProps> = ({
         currentDate.getMonth() + 1,
       ).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
       const isSelected = selectedDate === dateStr;
-
-      const count = availabilityMap[dateStr];
 
       let bgClass =
         "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 cursor-pointer border-emerald-100"; // Default Green (Available)

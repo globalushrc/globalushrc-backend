@@ -21,6 +21,8 @@ import {
   FaCheckCircle,
   FaKey,
   FaUsers,
+  FaMoneyBillWave,
+  FaSuitcaseRolling,
 } from "react-icons/fa";
 import { Editor, EditorProvider } from "react-simple-wysiwyg";
 
@@ -94,12 +96,37 @@ interface User {
   username: string;
 }
 
+interface BankRate {
+  _id: string;
+  currency: string;
+  symbol: string;
+  unit: number;
+  buy: number;
+  sell: number;
+  isPublished: boolean;
+  lastUpdated: string;
+}
+
+interface Job {
+  _id: string;
+  title: string;
+  company: string;
+  location: string;
+  description: string;
+  salary: string;
+  requirements: string;
+  isPublished: boolean;
+  datePosted: string;
+}
+
 const AdminDashboard = () => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [notices, setNotices] = useState<Notice[]>([]); // New State
+  const [bankRates, setBankRates] = useState<BankRate[]>([]);
+  const [jobs, setJobs] = useState<Job[]>([]);
 
   // User Management State
   const [users, setUsers] = useState<User[]>([]);
@@ -113,10 +140,24 @@ const AdminDashboard = () => {
     useState<Consultation | null>(null);
   const [showBillModal, setShowBillModal] = useState(false);
 
+  // Bank & Job Form State
+  const [editingBankRate, setEditingBankRate] =
+    useState<Partial<BankRate> | null>(null);
+  const [editingJob, setEditingJob] = useState<Partial<Job> | null>(null);
+  const [isUpdatingBank, setIsUpdatingBank] = useState(false);
+  const [isUpdatingJob, setIsUpdatingJob] = useState(false);
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<
-    "submissions" | "consultations" | "files" | "news" | "notices" | "admins"
+    | "submissions"
+    | "consultations"
+    | "files"
+    | "news"
+    | "notices"
+    | "admins"
+    | "bankRates"
+    | "jobs"
   >("submissions");
 
   // News Form State
@@ -188,6 +229,24 @@ const AdminDashboard = () => {
       if (usersRes.ok) {
         const usersData = await usersRes.json();
         setUsers(usersData);
+      }
+
+      // Fetch Bank Rates
+      const bankRes = await fetch(`${apiUrl}/api/admin/bank-rates`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (bankRes.ok) {
+        const bankData = await bankRes.json();
+        setBankRates(bankData);
+      }
+
+      // Fetch Jobs
+      const jobsRes = await fetch(`${apiUrl}/api/admin/jobs`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      });
+      if (jobsRes.ok) {
+        const jobsData = await jobsRes.json();
+        setJobs(jobsData);
       }
     } catch (err: any) {
       if (err.message.includes("401") || err.message.includes("403")) {
@@ -565,6 +624,93 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleUpdateBankRate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingBankRate?.currency) return;
+    setIsUpdatingBank(true);
+    try {
+      const apiUrl = getApiUrl();
+      const res = await fetch(`${apiUrl}/api/admin/bank-rates`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(editingBankRate),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setBankRates((prev) => {
+          const exists = prev.find((r) => r.currency === updated.currency);
+          if (exists)
+            return prev.map((r) =>
+              r.currency === updated.currency ? updated : r,
+            );
+          return [...prev, updated];
+        });
+        setEditingBankRate(null);
+        alert("Bank rate updated!");
+      }
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+    } finally {
+      setIsUpdatingBank(false);
+    }
+  };
+
+  const handleUpdateJob = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingJob?.title) return;
+    setIsUpdatingJob(true);
+    try {
+      const apiUrl = getApiUrl();
+      const res = await fetch(`${apiUrl}/api/admin/jobs`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify(editingJob),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setJobs((prev) => {
+          // If we had an _id, replace it, otherwise add new
+          const exists = prev.find((j) => j._id === updated._id);
+          if (exists)
+            return prev.map((j) => (j._id === updated._id ? updated : j));
+          return [updated, ...prev];
+        });
+        setEditingJob(null);
+        alert("Job updated!");
+      }
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+    } finally {
+      setIsUpdatingJob(false);
+    }
+  };
+
+  const handleDeleteJob = async (id: string) => {
+    if (!window.confirm("Delete this job listing?")) return;
+    try {
+      const apiUrl = getApiUrl();
+      const res = await fetch(`${apiUrl}/api/admin/jobs/delete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ id }),
+      });
+      if (res.ok) {
+        setJobs(jobs.filter((j) => j._id !== id));
+      }
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+    }
+  };
+
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!changePasswordId || !newPasswordForUpdate) return;
@@ -747,6 +893,50 @@ const AdminDashboard = () => {
                   </span>
                   <span className="text-[10px] font-black text-purple-600 bg-purple-50 px-2 py-1 rounded uppercase tracking-wider mb-1">
                     Admins
+                  </span>
+                </div>
+              </div>
+
+              <div className="h-px bg-gray-100 w-full"></div>
+
+              <div
+                className="group cursor-pointer"
+                onClick={() => setActiveTab("bankRates")}
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-sm font-bold text-slate-500 group-hover:text-amber-600 transition-colors">
+                    Official Bank Rates
+                  </p>
+                  <FaMoneyBillWave className="text-slate-300 group-hover:text-amber-600 transition-colors" />
+                </div>
+                <div className="flex items-end gap-3">
+                  <span className="text-5xl font-black text-slate-900 leading-none group-hover:text-amber-600 transition-colors">
+                    {bankRates.length}
+                  </span>
+                  <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-1 rounded uppercase tracking-wider mb-1">
+                    Forex
+                  </span>
+                </div>
+              </div>
+
+              <div className="h-px bg-gray-100 w-full"></div>
+
+              <div
+                className="group cursor-pointer"
+                onClick={() => setActiveTab("jobs")}
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <p className="text-sm font-bold text-slate-500 group-hover:text-blue-600 transition-colors">
+                    Job Bank Portal
+                  </p>
+                  <FaSuitcaseRolling className="text-slate-300 group-hover:text-blue-600 transition-colors" />
+                </div>
+                <div className="flex items-end gap-3">
+                  <span className="text-5xl font-black text-slate-900 leading-none group-hover:text-blue-600 transition-colors">
+                    {jobs.length}
+                  </span>
+                  <span className="text-[10px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded uppercase tracking-wider mb-1">
+                    Portal
                   </span>
                 </div>
               </div>
@@ -1671,6 +1861,388 @@ const AdminDashboard = () => {
                       </tbody>
                     </table>
                   )}
+                </div>
+              ) : activeTab === "bankRates" ? (
+                /* Bank Rates Management */
+                <div className="flex-1 overflow-auto bg-slate-50 relative">
+                  <div className="p-8 pb-32">
+                    <div className="flex justify-between items-center mb-6">
+                      <div>
+                        <h2 className="text-2xl font-black text-slate-800 tracking-tight text-amber-600">
+                          Official Bank Rates
+                        </h2>
+                        <p className="text-slate-400 font-medium text-xs">
+                          Manage official exchange rates and publish them to
+                          public resources
+                        </p>
+                      </div>
+                      <button
+                        onClick={() =>
+                          setEditingBankRate({
+                            currency: "",
+                            buy: 0,
+                            sell: 0,
+                            unit: 1,
+                            isPublished: false,
+                          })
+                        }
+                        className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2"
+                      >
+                        <FaMoneyBillWave /> Add Bank Rate
+                      </button>
+                    </div>
+
+                    {editingBankRate && (
+                      <div className="bg-white p-6 rounded-2xl shadow-md border border-amber-100 mb-8 animate-in fade-in slide-in-from-top-4">
+                        <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider mb-4">
+                          {editingBankRate._id
+                            ? "Edit Rate"
+                            : "Add New Official Rate"}
+                        </h3>
+                        <form
+                          onSubmit={handleUpdateBankRate}
+                          className="grid grid-cols-1 md:grid-cols-3 gap-4"
+                        >
+                          <input
+                            type="text"
+                            placeholder="Currency (e.g. USD, EUR)"
+                            value={editingBankRate.currency}
+                            onChange={(e) =>
+                              setEditingBankRate({
+                                ...editingBankRate,
+                                currency: e.target.value.toUpperCase(),
+                              })
+                            }
+                            className="bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-bold"
+                            required
+                          />
+                          <input
+                            type="number"
+                            placeholder="Buy Rate"
+                            step="0.01"
+                            value={editingBankRate.buy || ""}
+                            onChange={(e) =>
+                              setEditingBankRate({
+                                ...editingBankRate,
+                                buy: parseFloat(e.target.value),
+                              })
+                            }
+                            className="bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-bold"
+                            required
+                          />
+                          <input
+                            type="number"
+                            placeholder="Sell Rate"
+                            step="0.01"
+                            value={editingBankRate.sell || ""}
+                            onChange={(e) =>
+                              setEditingBankRate({
+                                ...editingBankRate,
+                                sell: parseFloat(e.target.value),
+                              })
+                            }
+                            className="bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-bold"
+                            required
+                          />
+                          <input
+                            type="number"
+                            placeholder="Unit (default 1)"
+                            value={editingBankRate.unit || ""}
+                            onChange={(e) =>
+                              setEditingBankRate({
+                                ...editingBankRate,
+                                unit: parseInt(e.target.value),
+                              })
+                            }
+                            className="bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-bold"
+                          />
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={editingBankRate.isPublished}
+                              onChange={(e) =>
+                                setEditingBankRate({
+                                  ...editingBankRate,
+                                  isPublished: e.target.checked,
+                                })
+                              }
+                              id="publish-rate"
+                            />
+                            <label
+                              htmlFor="publish-rate"
+                              className="text-xs font-bold text-slate-600"
+                            >
+                              Push to Public?
+                            </label>
+                          </div>
+                          <div className="md:col-span-3 flex justify-end gap-3 pt-4 border-t border-gray-50">
+                            <button
+                              type="button"
+                              onClick={() => setEditingBankRate(null)}
+                              className="px-4 py-2 text-xs font-bold text-slate-400"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              disabled={isUpdatingBank}
+                              className="bg-amber-600 text-white px-6 py-2 rounded-lg text-xs font-black uppercase tracking-wider"
+                            >
+                              {isUpdatingBank ? "Syncing..." : "Save Rate"}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-gray-100 italic">
+                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                              Currency
+                            </th>
+                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                              Unit
+                            </th>
+                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                              Buy
+                            </th>
+                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                              Sell
+                            </th>
+                            <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                              Status
+                            </th>
+                            <th className="px-6 py-4 text-right"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {bankRates.map((rate) => (
+                            <tr
+                              key={rate.currency}
+                              className="border-b border-gray-50 hover:bg-gray-50 transition-colors"
+                            >
+                              <td className="px-6 py-4 font-black text-slate-800">
+                                {rate.currency}
+                              </td>
+                              <td className="px-6 py-4 text-sm font-bold text-slate-500">
+                                {rate.unit}
+                              </td>
+                              <td className="px-6 py-4 text-sm font-bold text-emerald-600">
+                                {rate.buy}
+                              </td>
+                              <td className="px-6 py-4 text-sm font-bold text-rose-600">
+                                {rate.sell}
+                              </td>
+                              <td className="px-6 py-4">
+                                <span
+                                  className={`text-[9px] font-black px-2 py-1 rounded uppercase tracking-wider ${
+                                    rate.isPublished
+                                      ? "bg-emerald-50 text-emerald-600"
+                                      : "bg-amber-50 text-amber-600"
+                                  }`}
+                                >
+                                  {rate.isPublished ? "PUSHED LIVE" : "DRAFT"}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 text-right">
+                                <button
+                                  onClick={() => setEditingBankRate(rate)}
+                                  className="text-slate-300 hover:text-amber-600 transition-colors mr-2"
+                                >
+                                  <FaSyncAlt size={14} />
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              ) : activeTab === "jobs" ? (
+                /* Job Bank Management */
+                <div className="flex-1 overflow-auto bg-slate-50 relative">
+                  <div className="p-8 pb-32">
+                    <div className="flex justify-between items-center mb-6">
+                      <div>
+                        <h2 className="text-2xl font-black text-slate-800 tracking-tight text-blue-600">
+                          Job Bank Portal
+                        </h2>
+                        <p className="text-slate-400 font-medium text-xs">
+                          Maintain global career openings for the community
+                        </p>
+                      </div>
+                      <button
+                        onClick={() =>
+                          setEditingJob({
+                            title: "",
+                            company: "",
+                            location: "",
+                            description: "",
+                            isPublished: false,
+                          })
+                        }
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2"
+                      >
+                        <FaSuitcaseRolling /> Add New Job
+                      </button>
+                    </div>
+
+                    {editingJob && (
+                      <div className="bg-white p-6 rounded-2xl shadow-md border border-blue-100 mb-8">
+                        <form onSubmit={handleUpdateJob} className="space-y-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input
+                              type="text"
+                              placeholder="Job Title"
+                              value={editingJob.title}
+                              onChange={(e) =>
+                                setEditingJob({
+                                  ...editingJob,
+                                  title: e.target.value,
+                                })
+                              }
+                              className="bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-bold"
+                              required
+                            />
+                            <input
+                              type="text"
+                              placeholder="Company"
+                              value={editingJob.company}
+                              onChange={(e) =>
+                                setEditingJob({
+                                  ...editingJob,
+                                  company: e.target.value,
+                                })
+                              }
+                              className="bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-bold"
+                              required
+                            />
+                            <input
+                              type="text"
+                              placeholder="Location"
+                              value={editingJob.location}
+                              onChange={(e) =>
+                                setEditingJob({
+                                  ...editingJob,
+                                  location: e.target.value,
+                                })
+                              }
+                              className="bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-bold"
+                              required
+                            />
+                            <input
+                              type="text"
+                              placeholder="Salary Range"
+                              value={editingJob.salary}
+                              onChange={(e) =>
+                                setEditingJob({
+                                  ...editingJob,
+                                  salary: e.target.value,
+                                })
+                              }
+                              className="bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-bold"
+                            />
+                          </div>
+                          <textarea
+                            placeholder="Description & Requirements (HTML Supported)"
+                            value={editingJob.description}
+                            onChange={(e) =>
+                              setEditingJob({
+                                ...editingJob,
+                                description: e.target.value,
+                              })
+                            }
+                            className="w-full bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-medium h-32"
+                            required
+                          />
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={editingJob.isPublished}
+                              onChange={(e) =>
+                                setEditingJob({
+                                  ...editingJob,
+                                  isPublished: e.target.checked,
+                                })
+                              }
+                              id="publish-job"
+                            />
+                            <label
+                              htmlFor="publish-job"
+                              className="text-xs font-bold text-slate-600"
+                            >
+                              Publish Jobs Online?
+                            </label>
+                          </div>
+                          <div className="flex justify-end gap-3 pt-4 border-t border-gray-50">
+                            <button
+                              type="button"
+                              onClick={() => setEditingJob(null)}
+                              className="px-4 py-2 text-xs font-bold text-slate-400"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="submit"
+                              disabled={isUpdatingJob}
+                              className="bg-blue-600 text-white px-6 py-2 rounded-lg text-xs font-black uppercase tracking-wider"
+                            >
+                              {isUpdatingJob ? "Processing..." : "Save Listing"}
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {jobs.map((job) => (
+                        <div
+                          key={job._id}
+                          className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all flex flex-col justify-between group"
+                        >
+                          <div>
+                            <div className="flex justify-between items-start mb-4">
+                              <h3 className="font-black text-slate-800 text-lg leading-tight">
+                                {job.title}
+                              </h3>
+                              <span
+                                className={`text-[9px] font-black px-2 py-1 rounded uppercase tracking-wider ${
+                                  job.isPublished
+                                    ? "bg-emerald-50 text-emerald-600"
+                                    : "bg-slate-50 text-slate-400"
+                                }`}
+                              >
+                                {job.isPublished ? "LIVE" : "DRAFT"}
+                              </span>
+                            </div>
+                            <p className="text-xs font-bold text-slate-600">
+                              {job.company} • {job.location}
+                            </p>
+                            <p className="text-[10px] text-slate-400 font-bold mt-1 italic">
+                              {new Date(job.datePosted).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex justify-end gap-2 mt-6">
+                            <button
+                              onClick={() => setEditingJob(job)}
+                              className="w-10 h-10 inline-flex items-center justify-center text-slate-300 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
+                            >
+                              <FaSyncAlt />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteJob(job._id)}
+                              className="w-10 h-10 inline-flex items-center justify-center text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
+                            >
+                              <FaTrash />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ) : activeTab === "admins" ? (
                 /* Admins Management */
