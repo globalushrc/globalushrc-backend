@@ -28,13 +28,41 @@ const industryImages = [
 
 const Industries = () => {
   const [currentImage, setCurrentImage] = useState(0);
+  const [siteSettings, setSiteSettings] = useState<any>({});
 
   useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const hostname = window.location.hostname;
+        const apiUrl =
+          import.meta.env.VITE_API_URL || `http://${hostname}:5001`;
+        const res = await fetch(`${apiUrl}/api/settings`);
+        if (res.ok) {
+          const data = await res.json();
+          setSiteSettings(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch settings:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const heroImages =
+    siteSettings.hero_images && siteSettings.hero_images.length > 0
+      ? siteSettings.hero_images
+      : industryImages;
+
+  useEffect(() => {
+    if (heroImages.length <= 1) {
+      setCurrentImage(0);
+      return;
+    }
     const timer = setInterval(() => {
-      setCurrentImage((prev) => (prev + 1) % industryImages.length);
+      setCurrentImage((prev) => (prev + 1) % heroImages.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [heroImages.length]);
   const industries = [
     {
       name: "Technology & SaaS",
@@ -146,9 +174,27 @@ const Industries = () => {
               transition={{ duration: 1.5, ease: "easeInOut" }}
               className="absolute inset-0 bg-cover bg-center"
               style={{
-                backgroundImage: `url('${industryImages[currentImage]}')`,
+                backgroundImage: `url('${heroImages[currentImage]}')`,
               }}
             />
+          </AnimatePresence>
+
+          {/* Animated Logo Watermark */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`logo-${currentImage}`}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 0.1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 2 }}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            >
+              <img
+                src="/logo.png"
+                alt="Logo Watermark"
+                className="w-[400px] h-[400px] object-contain invert brightness-200"
+              />
+            </motion.div>
           </AnimatePresence>
 
           {/* Refined Overlays for Clarity */}
@@ -174,7 +220,7 @@ const Industries = () => {
 
         {/* Centered Slider Indicators - Moved up for balance */}
         <div className="absolute bottom-16 md:bottom-24 left-1/2 -translate-x-1/2 z-20 flex gap-3">
-          {industryImages.map((_, idx) => (
+          {heroImages.map((_: any, idx: number) => (
             <button
               key={idx}
               onClick={() => setCurrentImage(idx)}

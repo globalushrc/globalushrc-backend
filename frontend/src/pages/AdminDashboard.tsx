@@ -23,6 +23,7 @@ import {
   FaUsers,
   FaMoneyBillWave,
   FaSuitcaseRolling,
+  FaShieldAlt,
 } from "react-icons/fa";
 import { Editor, EditorProvider } from "react-simple-wysiwyg";
 
@@ -127,6 +128,9 @@ const AdminDashboard = () => {
   const [notices, setNotices] = useState<Notice[]>([]); // New State
   const [bankRates, setBankRates] = useState<BankRate[]>([]);
   const [jobs, setJobs] = useState<Job[]>([]);
+  const [selectedConsultations, setSelectedConsultations] = useState<number[]>(
+    [],
+  );
 
   // User Management State
   const [users, setUsers] = useState<User[]>([]);
@@ -158,6 +162,7 @@ const AdminDashboard = () => {
     | "admins"
     | "bankRates"
     | "jobs"
+    | "settings"
   >("submissions");
 
   // News Form State
@@ -173,6 +178,16 @@ const AdminDashboard = () => {
     "normal",
   );
   const [isPostingNotice, setIsPostingNotice] = useState(false);
+
+  // Site Settings State
+  const [siteSettings, setSiteSettings] = useState<any>({
+    company_reg: "---",
+    pan_vat: "---",
+    dofe_license: "---",
+  });
+  const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
+  const [newHeroImageUrl, setNewHeroImageUrl] = useState("");
+
   const navigate = useNavigate();
 
   const getApiUrl = () => {
@@ -247,6 +262,16 @@ const AdminDashboard = () => {
       if (jobsRes.ok) {
         const jobsData = await jobsRes.json();
         setJobs(jobsData);
+      }
+
+      // Fetch Site Settings
+      const settingsRes = await fetch(`${apiUrl}/api/settings`);
+      if (settingsRes.ok) {
+        const settingsData = await settingsRes.json();
+        setSiteSettings((prev: any) => ({
+          ...prev,
+          ...settingsData,
+        }));
       }
     } catch (err: any) {
       if (err.message.includes("401") || err.message.includes("403")) {
@@ -502,6 +527,56 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedConsultations(consultations.map((c) => c.id));
+    } else {
+      setSelectedConsultations([]);
+    }
+  };
+
+  const handleSelectOne = (id: number) => {
+    if (selectedConsultations.includes(id)) {
+      setSelectedConsultations(
+        selectedConsultations.filter((pid) => pid !== id),
+      );
+    } else {
+      setSelectedConsultations([...selectedConsultations, id]);
+    }
+  };
+
+  const handleBulkDeleteConsultations = async () => {
+    if (
+      !window.confirm(
+        `Delete ${selectedConsultations.length} selected consultations?`,
+      )
+    )
+      return;
+
+    try {
+      const apiUrl = getApiUrl();
+      await Promise.all(
+        selectedConsultations.map((id) =>
+          fetch(`${apiUrl}/api/consultations/${id}`, {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }),
+        ),
+      );
+
+      setConsultations(
+        consultations.filter((c) => !selectedConsultations.includes(c.id)),
+      );
+      setSelectedConsultations([]);
+      alert("Selected consultations deleted.");
+    } catch (err: any) {
+      console.error("Bulk Delete Error:", err);
+      alert("Failed to delete some records.");
+    }
+  };
+
   const handleProcessConsultation = async (id: number) => {
     try {
       const apiUrl = getApiUrl();
@@ -739,6 +814,32 @@ const AdminDashboard = () => {
       }
     } catch (error: any) {
       alert(`Error: ${error.message}`);
+    }
+  };
+
+  const handleUpdateSetting = async (key: string, value: any) => {
+    setIsUpdatingSettings(true);
+    try {
+      const apiUrl = getApiUrl();
+      const res = await fetch(`${apiUrl}/api/admin/settings`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({ key, value }),
+      });
+
+      if (res.ok) {
+        setSiteSettings({ ...siteSettings, [key]: value });
+      } else {
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Failed to update setting: ${errorData.error || res.statusText}`);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUpdatingSettings(false);
     }
   };
 
@@ -1104,6 +1205,20 @@ const AdminDashboard = () => {
                     <div className="absolute bottom-0 left-0 right-0 h-1 bg-purple-600 rounded-t-full"></div>
                   )}
                 </button>
+                <button
+                  onClick={() => setActiveTab("settings")}
+                  className={`relative flex items-center gap-3 px-2 text-sm font-black transition-all h-full ${
+                    activeTab === "settings"
+                      ? "text-blue-600"
+                      : "text-slate-400 hover:text-blue-600"
+                  }`}
+                >
+                  <FaDatabase size={16} />
+                  <span className="uppercase tracking-widest">Settings</span>
+                  {activeTab === "settings" && (
+                    <div className="absolute bottom-0 left-0 right-0 h-1 bg-blue-600 rounded-t-full"></div>
+                  )}
+                </button>
               </div>
 
               <div className="hidden sm:flex items-center gap-4">
@@ -1399,182 +1514,220 @@ const AdminDashboard = () => {
                       </p>
                     </div>
                   ) : (
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="bg-slate-50/50 text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black">
-                          <th className="px-10 py-6 border-b border-gray-100">
-                            Client Details
-                          </th>
-                          <th className="px-10 py-6 border-b border-gray-100">
-                            Service & Payment
-                          </th>
-                          <th className="px-10 py-6 border-b border-gray-100">
-                            Appointment Time
-                          </th>
-                          <th className="px-10 py-6 border-b border-gray-100 text-right">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-50">
-                        {consultations.map((cons) => (
-                          <tr
-                            key={cons.id}
-                            className="hover:bg-slate-50/30 transition-all group"
+                    <>
+                      {selectedConsultations.length > 0 && (
+                        <div className="mb-4 bg-rose-50 border border-rose-100 p-3 rounded-xl flex items-center justify-between animate-in slide-in-from-top-2">
+                          <span className="text-sm font-bold text-rose-800 ml-2">
+                            {selectedConsultations.length} items selected
+                          </span>
+                          <button
+                            onClick={handleBulkDeleteConsultations}
+                            className="px-4 py-2 bg-rose-600 text-white text-xs font-black uppercase tracking-widest rounded-lg hover:bg-rose-700 transition-all shadow-sm flex items-center gap-2"
                           >
-                            <td className="px-10 py-8">
-                              <div className="font-extrabold text-slate-900 group-hover:text-[#001f3f] transition-colors uppercase tracking-tight mb-1">
-                                {cons.name}
-                              </div>
-                              <div className="text-xs text-slate-400 font-bold tracking-wide">
-                                {cons.email}
-                              </div>
-                              <div
-                                className="text-xs font-bold tracking-wide mt-1 flex items-center gap-1"
-                                style={{ color: "#080ba5" }}
-                              >
-                                <span className="text-emerald-500">📱</span>
-                                {cons.phone}
-                              </div>
-                            </td>
-                            <td className="px-10 py-8">
-                              <div className="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-800 text-[9px] font-black uppercase tracking-widest rounded mb-2 border border-emerald-100">
-                                {cons.service}
-                              </div>
-                              {cons.paymentId ? (
-                                <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-100">
-                                  <div className="text-[10px] font-bold text-blue-900 mb-1">
-                                    💳 ${cons.amountPaid?.toFixed(2) || "0.00"}{" "}
-                                    Paid
+                            <FaTrash size={12} /> Delete Selected
+                          </button>
+                        </div>
+                      )}
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50/50 text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black">
+                            <th className="px-6 py-6 border-b border-gray-100 w-16 text-center">
+                              <input
+                                type="checkbox"
+                                onChange={handleSelectAll}
+                                checked={
+                                  consultations.length > 0 &&
+                                  selectedConsultations.length ===
+                                    consultations.length
+                                }
+                                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                              />
+                            </th>
+                            <th className="px-10 py-6 border-b border-gray-100">
+                              Client Details
+                            </th>
+                            <th className="px-10 py-6 border-b border-gray-100">
+                              Service & Payment
+                            </th>
+                            <th className="px-10 py-6 border-b border-gray-100">
+                              Appointment Time
+                            </th>
+                            <th className="px-10 py-6 border-b border-gray-100 text-right">
+                              Actions
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                          {consultations.map((cons) => (
+                            <tr
+                              key={cons.id}
+                              className="hover:bg-slate-50/30 transition-all group"
+                            >
+                              <td className="px-6 py-8 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedConsultations.includes(
+                                    cons.id,
+                                  )}
+                                  onChange={() => handleSelectOne(cons.id)}
+                                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                />
+                              </td>
+                              <td className="px-10 py-8">
+                                <div className="font-extrabold text-slate-900 group-hover:text-[#001f3f] transition-colors uppercase tracking-tight mb-1">
+                                  {cons.name}
+                                </div>
+                                <div className="text-xs text-slate-400 font-bold tracking-wide">
+                                  {cons.email}
+                                </div>
+                                <div
+                                  className="text-xs font-bold tracking-wide mt-1 flex items-center gap-1"
+                                  style={{ color: "#080ba5" }}
+                                >
+                                  <span className="text-emerald-500">📱</span>
+                                  {cons.phone}
+                                </div>
+                              </td>
+                              <td className="px-10 py-8">
+                                <div className="inline-block px-2 py-0.5 bg-emerald-50 text-emerald-800 text-[9px] font-black uppercase tracking-widest rounded mb-2 border border-emerald-100">
+                                  {cons.service}
+                                </div>
+                                {cons.paymentId ? (
+                                  <div className="mt-2 p-2 bg-blue-50 rounded-lg border border-blue-100">
+                                    <div className="text-[10px] font-bold text-blue-900 mb-1">
+                                      💳 $
+                                      {cons.amountPaid?.toFixed(2) || "0.00"}{" "}
+                                      Paid
+                                    </div>
+                                    <div className="text-[9px] text-blue-600 font-mono">
+                                      {cons.paymentId.substring(0, 20)}...
+                                    </div>
                                   </div>
-                                  <div className="text-[9px] text-blue-600 font-mono">
-                                    {cons.paymentId.substring(0, 20)}...
+                                ) : cons.status === "Pending Payment" ? (
+                                  <div className="mt-2 px-2 py-1 bg-rose-50 text-rose-700 text-[9px] font-black uppercase tracking-widest rounded border border-rose-100 inline-block">
+                                    Pending Payment ($50.00)
                                   </div>
-                                </div>
-                              ) : cons.status === "Pending Payment" ? (
-                                <div className="mt-2 px-2 py-1 bg-rose-50 text-rose-700 text-[9px] font-black uppercase tracking-widest rounded border border-rose-100 inline-block">
-                                  Pending Payment ($50.00)
-                                </div>
-                              ) : (
-                                <div className="mt-2 px-2 py-1 bg-amber-50 text-amber-700 text-[9px] font-black uppercase tracking-widest rounded border border-amber-100 inline-block">
-                                  Free Consultation
-                                </div>
-                              )}
-                              {cons.message && (
-                                <p className="text-slate-500 text-xs line-clamp-2 max-w-xs leading-relaxed font-medium mt-2">
-                                  {cons.message}
-                                </p>
-                              )}
-                            </td>
-                            <td className="px-10 py-8">
-                              <div className="text-xs font-bold text-slate-700 mb-1">
-                                📅{" "}
-                                {new Date(
-                                  cons.preferredDate,
-                                ).toLocaleDateString("en-US", {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                })}
-                              </div>
-                              <div className="text-xs text-slate-500 mb-2">
-                                🕐 {cons.preferredTime}
-                              </div>
-                              {cons.location && (
-                                <div className="space-y-1 mt-2 border-t border-gray-100 pt-2">
-                                  <div className="text-xs text-slate-600 font-semibold">
-                                    📍 {cons.location.city},{" "}
-                                    {cons.location.country}
+                                ) : (
+                                  <div className="mt-2 px-2 py-1 bg-amber-50 text-amber-700 text-[9px] font-black uppercase tracking-widest rounded border border-amber-100 inline-block">
+                                    Free Consultation
                                   </div>
-                                  <a
-                                    href={`https://www.google.com/maps?q=${cons.location.latitude},${cons.location.longitude}`}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-[10px] text-emerald-600 hover:text-emerald-700 font-bold block"
-                                  >
-                                    View on Map
-                                  </a>
-                                </div>
-                              )}
-                            </td>
-                            <td className="px-10 py-8 text-right flex items-center justify-end gap-2">
-                              {cons.status !== "Processed" &&
-                                (cons.paymentId ||
-                                  cons.status === "Pending" ||
-                                  cons.status === "Pending Payment" ||
-                                  cons.status === "Paid") && (
-                                  <button
-                                    onClick={() =>
-                                      handleProcessConsultation(cons.id)
-                                    }
-                                    className="px-4 py-2 bg-[#001f3f] text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-600 transition-all shadow-lg flex items-center gap-2"
-                                    title="Mark Processed & Begin Video Call"
-                                  >
-                                    <FaVideo size={12} /> Process
-                                  </button>
                                 )}
+                                {cons.message && (
+                                  <p className="text-slate-500 text-xs line-clamp-2 max-w-xs leading-relaxed font-medium mt-2">
+                                    {cons.message}
+                                  </p>
+                                )}
+                              </td>
+                              <td className="px-10 py-8">
+                                <div className="text-xs font-bold text-slate-700 mb-1">
+                                  📅{" "}
+                                  {new Date(
+                                    cons.preferredDate,
+                                  ).toLocaleDateString("en-US", {
+                                    year: "numeric",
+                                    month: "short",
+                                    day: "numeric",
+                                  })}
+                                </div>
+                                <div className="text-xs text-slate-500 mb-2">
+                                  🕐 {cons.preferredTime}
+                                </div>
+                                {cons.location && (
+                                  <div className="space-y-1 mt-2 border-t border-gray-100 pt-2">
+                                    <div className="text-xs text-slate-600 font-semibold">
+                                      📍 {cons.location.city},{" "}
+                                      {cons.location.country}
+                                    </div>
+                                    <a
+                                      href={`https://www.google.com/maps?q=${cons.location.latitude},${cons.location.longitude}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-[10px] text-emerald-600 hover:text-emerald-700 font-bold block"
+                                    >
+                                      View on Map
+                                    </a>
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-10 py-8 text-right flex items-center justify-end gap-2">
+                                {cons.status !== "Processed" &&
+                                  (cons.paymentId ||
+                                    cons.status === "Pending" ||
+                                    cons.status === "Pending Payment" ||
+                                    cons.status === "Paid") && (
+                                    <button
+                                      onClick={() =>
+                                        handleProcessConsultation(cons.id)
+                                      }
+                                      className="px-4 py-2 bg-[#001f3f] text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-600 transition-all shadow-lg flex items-center gap-2"
+                                      title="Mark Processed & Begin Video Call"
+                                    >
+                                      <FaVideo size={12} /> Process
+                                    </button>
+                                  )}
 
-                              {cons.status === "Processed" && (
-                                <div className="flex gap-2">
+                                {cons.status === "Processed" && (
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => {
+                                        const serviceParam = cons.service
+                                          ? `?service=${encodeURIComponent(
+                                              cons.service,
+                                            )}`
+                                          : "";
+                                        window.open(
+                                          `/meeting/${cons.id}${serviceParam}`,
+                                          "_blank",
+                                        );
+                                      }}
+                                      className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2"
+                                      title="Re-enter Meeting Room"
+                                    >
+                                      <FaCheckCircle size={12} /> Active Room
+                                    </button>
+                                    <button
+                                      onClick={() =>
+                                        handleCompleteConsultation(cons.id)
+                                      }
+                                      className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-600 border border-blue-100 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
+                                      title="Mark as Completed"
+                                    >
+                                      <FaCheckCircle size={14} />
+                                    </button>
+                                  </div>
+                                )}
+                                {cons.status === "Completed" && (
+                                  <div className="px-3 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-gray-200">
+                                    Completed
+                                  </div>
+                                )}
+                                {cons.paymentId && (
                                   <button
                                     onClick={() => {
-                                      const serviceParam = cons.service
-                                        ? `?service=${encodeURIComponent(
-                                            cons.service,
-                                          )}`
-                                        : "";
-                                      window.open(
-                                        `/meeting/${cons.id}${serviceParam}`,
-                                        "_blank",
-                                      );
+                                      setSelectedConsultationForBill(cons);
+                                      setShowBillModal(true);
                                     }}
-                                    className="px-4 py-2 bg-emerald-50 text-emerald-600 border border-emerald-100 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-600 hover:text-white transition-all flex items-center gap-2"
-                                    title="Re-enter Meeting Room"
+                                    className="w-10 h-10 flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-90 border border-transparent hover:border-blue-100"
+                                    title="Generate Payment Bill"
                                   >
-                                    <FaCheckCircle size={12} /> Active Room
+                                    <FaFileAlt size={14} />
                                   </button>
-                                  <button
-                                    onClick={() =>
-                                      handleCompleteConsultation(cons.id)
-                                    }
-                                    className="w-8 h-8 flex items-center justify-center bg-blue-50 text-blue-600 border border-blue-100 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-sm"
-                                    title="Mark as Completed"
-                                  >
-                                    <FaCheckCircle size={14} />
-                                  </button>
-                                </div>
-                              )}
-                              {cons.status === "Completed" && (
-                                <div className="px-3 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-[10px] font-black uppercase tracking-widest border border-gray-200">
-                                  Completed
-                                </div>
-                              )}
-                              {cons.paymentId && (
+                                )}
                                 <button
-                                  onClick={() => {
-                                    setSelectedConsultationForBill(cons);
-                                    setShowBillModal(true);
-                                  }}
-                                  className="w-10 h-10 flex items-center justify-center text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all active:scale-90 border border-transparent hover:border-blue-100"
-                                  title="Generate Payment Bill"
+                                  onClick={() =>
+                                    handleDeleteConsultation(cons.id)
+                                  }
+                                  className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all active:scale-90 border border-transparent hover:border-rose-100"
+                                  title="Delete Record"
                                 >
-                                  <FaFileAlt size={14} />
+                                  <FaTrash size={14} />
                                 </button>
-                              )}
-                              <button
-                                onClick={() =>
-                                  handleDeleteConsultation(cons.id)
-                                }
-                                className="w-10 h-10 flex items-center justify-center text-slate-300 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all active:scale-90 border border-transparent hover:border-rose-100"
-                                title="Delete Record"
-                              >
-                                <FaTrash size={14} />
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </>
                   )}
                 </div>
               ) : activeTab === "news" ? (
@@ -2136,7 +2289,7 @@ const AdminDashboard = () => {
                             <input
                               type="text"
                               placeholder="Salary Range"
-                              value={editingJob.salary}
+                              value={editingJob.salary || ""}
                               onChange={(e) =>
                                 setEditingJob({
                                   ...editingJob,
@@ -2146,18 +2299,39 @@ const AdminDashboard = () => {
                               className="bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-bold"
                             />
                           </div>
-                          <textarea
-                            placeholder="Description & Requirements (HTML Supported)"
-                            value={editingJob.description}
-                            onChange={(e) =>
-                              setEditingJob({
-                                ...editingJob,
-                                description: e.target.value,
-                              })
-                            }
-                            className="w-full bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-medium h-32"
-                            required
-                          />
+                          <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">
+                              Requirements
+                            </label>
+                            <textarea
+                              placeholder="Job Requirements (One per line)"
+                              value={editingJob.requirements || ""}
+                              onChange={(e) =>
+                                setEditingJob({
+                                  ...editingJob,
+                                  requirements: e.target.value,
+                                })
+                              }
+                              className="w-full bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-medium h-24"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1 block">
+                              Description
+                            </label>
+                            <textarea
+                              placeholder="Description (HTML Supported)"
+                              value={editingJob.description}
+                              onChange={(e) =>
+                                setEditingJob({
+                                  ...editingJob,
+                                  description: e.target.value,
+                                })
+                              }
+                              className="w-full bg-gray-50 border border-gray-200 rounded px-3 py-2 text-xs font-medium h-32"
+                              required
+                            />
+                          </div>
                           <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
@@ -2221,7 +2395,25 @@ const AdminDashboard = () => {
                             <p className="text-xs font-bold text-slate-600">
                               {job.company} • {job.location}
                             </p>
-                            <p className="text-[10px] text-slate-400 font-bold mt-1 italic">
+                            <div className="mt-3 space-y-2">
+                              {job.salary && (
+                                <div className="text-[11px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block uppercase tracking-wider">
+                                  💰 {job.salary}
+                                </div>
+                              )}
+                              {job.requirements && (
+                                <div className="text-[10px] text-slate-500 font-medium leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                  <span className="font-black text-slate-400 uppercase tracking-widest block mb-1">
+                                    Requirements:
+                                  </span>
+                                  {job.requirements}
+                                </div>
+                              )}
+                              <p className="text-[10px] text-slate-400 line-clamp-2">
+                                {job.description}
+                              </p>
+                            </div>
+                            <p className="text-[10px] text-slate-400 font-bold mt-3 italic">
                               {new Date(job.datePosted).toLocaleDateString()}
                             </p>
                           </div>
@@ -2351,6 +2543,224 @@ const AdminDashboard = () => {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                </div>
+              ) : activeTab === "settings" ? (
+                <div className="p-10 space-y-12">
+                  <div className="max-w-2xl">
+                    <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-2">
+                      Management Credentials
+                    </h3>
+                    <p className="text-sm text-slate-400 font-bold uppercase tracking-widest mb-10">
+                      Update consultancy identifier details displayed on public
+                      resources.
+                    </p>
+
+                    <div className="space-y-8">
+                      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col sm:flex-row sm:items-end gap-6 group hover:border-blue-200 transition-all">
+                        <div className="flex-1">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">
+                            Company Registration Number
+                          </label>
+                          <input
+                            type="text"
+                            value={siteSettings.company_reg || ""}
+                            onChange={(e) =>
+                              setSiteSettings({
+                                ...siteSettings,
+                                company_reg: e.target.value,
+                              })
+                            }
+                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all"
+                            placeholder="#284915/078/079"
+                          />
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleUpdateSetting(
+                              "company_reg",
+                              siteSettings.company_reg,
+                            )
+                          }
+                          disabled={isUpdatingSettings}
+                          className="px-6 py-3.5 bg-[#001f3f] text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#003366] transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-blue-900/20"
+                        >
+                          Save
+                        </button>
+                      </div>
+
+                      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col sm:flex-row sm:items-end gap-6 group hover:border-blue-200 transition-all">
+                        <div className="flex-1">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">
+                            PAN / VAT Registration
+                          </label>
+                          <input
+                            type="text"
+                            value={siteSettings.pan_vat || ""}
+                            onChange={(e) =>
+                              setSiteSettings({
+                                ...siteSettings,
+                                pan_vat: e.target.value,
+                              })
+                            }
+                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all"
+                            placeholder="#610192845"
+                          />
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleUpdateSetting("pan_vat", siteSettings.pan_vat)
+                          }
+                          disabled={isUpdatingSettings}
+                          className="px-6 py-3.5 bg-[#001f3f] text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#003366] transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-blue-900/20"
+                        >
+                          Save
+                        </button>
+                      </div>
+
+                      <div className="bg-slate-50 p-6 rounded-2xl border border-slate-100 flex flex-col sm:flex-row sm:items-end gap-6 group hover:border-blue-200 transition-all">
+                        <div className="flex-1">
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block">
+                            DOFE License Number
+                          </label>
+                          <input
+                            type="text"
+                            value={siteSettings.dofe_license || ""}
+                            onChange={(e) =>
+                              setSiteSettings({
+                                ...siteSettings,
+                                dofe_license: e.target.value,
+                              })
+                            }
+                            className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all"
+                            placeholder="#1584/079/080"
+                          />
+                        </div>
+                        <button
+                          onClick={() =>
+                            handleUpdateSetting(
+                              "dofe_license",
+                              siteSettings.dofe_license,
+                            )
+                          }
+                          disabled={isUpdatingSettings}
+                          className="px-6 py-3.5 bg-[#001f3f] text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-[#003366] transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-blue-900/20"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="mt-12 p-6 bg-amber-50 rounded-2xl border border-amber-100 flex items-start gap-4">
+                      <FaShieldAlt className="text-amber-500 text-xl mt-1" />
+                      <div>
+                        <h4 className="text-sm font-black text-amber-900 uppercase tracking-tight mb-1">
+                          Security Warning
+                        </h4>
+                        <p className="text-xs text-amber-700 font-medium leading-relaxed">
+                          Changing these numbers affects the "Verified
+                          Consultancy" block on the Resources page. Ensure
+                          accuracy to maintain legal compliance and partner
+                          trust.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="mt-16 pt-12 border-t border-slate-100">
+                      <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-2">
+                        Hero Background Images
+                      </h3>
+                      <p className="text-sm text-slate-400 font-bold uppercase tracking-widest mb-10">
+                        Curate the high-resolution images displayed on the
+                        Resources and Global Coverage pages.
+                      </p>
+
+                      <div className="space-y-6">
+                        {/* New Image Input */}
+                        <div className="bg-blue-50/50 p-6 rounded-2xl border-2 border-dashed border-blue-200 flex flex-col sm:flex-row items-end gap-6 group hover:border-blue-400 transition-all">
+                          <div className="flex-1">
+                            <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-3 block">
+                              Add New Hero Image URL
+                            </label>
+                            <input
+                              type="text"
+                              value={newHeroImageUrl}
+                              onChange={(e) =>
+                                setNewHeroImageUrl(e.target.value)
+                              }
+                              className="w-full bg-white border border-blue-100 rounded-xl px-4 py-3 font-bold text-slate-700 outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-all"
+                              placeholder="https://images.unsplash.com/photo-..."
+                            />
+                          </div>
+                          <button
+                            onClick={() => {
+                              if (!newHeroImageUrl) return;
+                              const currentImages =
+                                siteSettings.hero_images || [];
+                              const updatedImages = [
+                                ...currentImages,
+                                newHeroImageUrl,
+                              ];
+                              handleUpdateSetting("hero_images", updatedImages);
+                              setNewHeroImageUrl("");
+                            }}
+                            disabled={isUpdatingSettings}
+                            className="px-6 py-3.5 bg-blue-600 text-white text-xs font-black uppercase tracking-widest rounded-xl hover:bg-blue-700 transition-all active:scale-95 disabled:opacity-50 shadow-lg shadow-blue-500/20"
+                          >
+                            Add
+                          </button>
+                        </div>
+
+                        {/* Current Images List */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {(siteSettings.hero_images || []).map(
+                            (url: string, idx: number) => (
+                              <div
+                                key={idx}
+                                className="relative group rounded-2xl overflow-hidden border border-slate-100 aspect-video bg-slate-100 shadow-sm"
+                              >
+                                <img
+                                  src={url}
+                                  alt={`Hero ${idx + 1}`}
+                                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                                  <button
+                                    onClick={() => {
+                                      if (!window.confirm("Remove this image?"))
+                                        return;
+                                      const updatedImages =
+                                        siteSettings.hero_images.filter(
+                                          (_: any, i: number) => i !== idx,
+                                        );
+                                      handleUpdateSetting(
+                                        "hero_images",
+                                        updatedImages,
+                                      );
+                                    }}
+                                    className="p-3 bg-rose-500 text-white rounded-full hover:bg-rose-600 transition-all transform hover:scale-110 shadow-lg"
+                                  >
+                                    <FaTrash size={14} />
+                                  </button>
+                                </div>
+                                <div className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 backdrop-blur-md rounded text-[8px] font-black text-white uppercase tracking-widest">
+                                  Image #{idx + 1}
+                                </div>
+                              </div>
+                            ),
+                          )}
+                        </div>
+
+                        {(siteSettings.hero_images || []).length === 0 && (
+                          <div className="py-20 text-center border-2 border-dashed border-slate-100 rounded-3xl">
+                            <p className="text-slate-400 font-bold italic">
+                              No custom hero images added. Using system
+                              defaults.
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

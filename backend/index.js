@@ -22,6 +22,7 @@ const News = require("./models/News");
 const Notice = require("./models/Notice");
 const BankRate = require("./models/BankRate");
 const Job = require("./models/Job");
+const Setting = require("./models/Setting");
 const mongoose = require("mongoose");
 
 // Connect to MongoDB
@@ -646,7 +647,7 @@ app.post(
       let clientSecret = null;
       let status = "Pending"; // Default status
       const selectedPaymentMethod = paymentMethod || "stripe"; // Default to stripe
-      const amount = isPremium ? 10000 : 5000; // $100 if premium, $50 if standard
+      const amount = isPremium ? 200 : 100; // $2 if premium, $1 if standard
 
       // Handle Stripe Payment
       if (selectedPaymentMethod === "stripe" && stripe) {
@@ -1479,6 +1480,42 @@ app.post("/api/admin/jobs/delete", authenticateToken, async (req, res) => {
     res.json({ message: "Job deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: "Failed to delete job" });
+  }
+});
+
+// --- Settings Endpoints ---
+
+// Get all public settings
+app.get("/api/settings", async (req, res) => {
+  try {
+    const settings = await Setting.find({});
+    // Map to a simpler object { [key]: value }
+    const settingsMap = {};
+    settings.forEach((s) => {
+      settingsMap[s.key] = s.value;
+    });
+    res.json(settingsMap);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch settings" });
+  }
+});
+
+// Update settings (Admin)
+app.post("/api/admin/settings", authenticateToken, async (req, res) => {
+  try {
+    const { key, value } = req.body;
+    if (!key) return res.status(400).json({ error: "Key is required" });
+
+    const setting = await Setting.findOneAndUpdate(
+      { key },
+      { value, updatedAt: Date.now() },
+      { upsert: true, new: true },
+    );
+
+    logger.info("Setting updated", { key });
+    res.json(setting);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to update setting" });
   }
 });
 

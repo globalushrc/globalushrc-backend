@@ -63,7 +63,7 @@ const BookConsultation = () => {
           const rate = data.rates.NPR;
           if (rate) {
             setExchangeRate(rate);
-            const basePrice = isPremium ? 100 : 50;
+            const basePrice = isPremium ? 2 : 1;
             setNprAmount(Math.ceil(basePrice * rate)); // Round up for cleaner transaction
           }
         }
@@ -791,7 +791,7 @@ const BookConsultation = () => {
                         <span
                           className={`text-[10px] font-medium transition-colors ${!isPremium ? "text-blue-100" : "text-slate-400"}`}
                         >
-                          $50 - Regular Access
+                          $1 - Standard Access
                         </span>
                         {!isPremium && (
                           <div className="absolute top-0 right-0 p-1.5">
@@ -824,7 +824,7 @@ const BookConsultation = () => {
                         <span
                           className={`text-[10px] font-medium transition-colors ${isPremium ? "text-amber-400" : "text-slate-400"}`}
                         >
-                          $100 - Priority Access
+                          $2 - Priority Access
                         </span>
                         {isPremium && (
                           <div className="absolute top-0 right-0 p-1.5">

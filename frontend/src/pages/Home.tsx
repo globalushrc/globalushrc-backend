@@ -14,7 +14,11 @@ import {
   FaPassport,
 } from "react-icons/fa";
 
-const Home = () => {
+const Home = ({
+  setHeroTheme,
+}: {
+  setHeroTheme: (t: "light" | "dark") => void;
+}) => {
   const [news, setNews] = useState<any[]>([]);
 
   useEffect(() => {
@@ -48,7 +52,7 @@ const Home = () => {
   return (
     <div>
       <NoticeBoard />
-      <Hero />
+      <Hero setHeroTheme={setHeroTheme} />
 
       {/* Services Snapshot */}
       <section className="py-20 md:py-32 bg-slate-50 relative overflow-hidden">

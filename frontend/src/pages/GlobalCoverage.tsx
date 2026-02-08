@@ -235,13 +235,45 @@ const coverageImages = [
 
 const GlobalCoverage = () => {
   const [currentImage, setCurrentImage] = useState(0);
+  const [siteSettings, setSiteSettings] = useState<any>({
+    hero_images: [],
+  });
+
+  const getApiUrl = () => {
+    const hostname = window.location.hostname;
+    return import.meta.env.VITE_API_URL || `http://${hostname}:5001`;
+  };
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const apiUrl = getApiUrl();
+        const res = await fetch(`${apiUrl}/api/settings`);
+        if (res.ok) {
+          const data = await res.json();
+          setSiteSettings(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch settings", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const heroImages =
+    siteSettings.hero_images && siteSettings.hero_images.length > 0
+      ? siteSettings.hero_images.map((url: string) => ({
+          url,
+          name: "Global Presence",
+        }))
+      : coverageImages;
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentImage((prev) => (prev + 1) % coverageImages.length);
+      setCurrentImage((prev) => (prev + 1) % heroImages.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [heroImages.length]);
   const euVisas = [
     { name: "EU Blue Card", time: "1-3 months" },
     { name: "ICT Permit", time: "2-4 months" },
@@ -714,9 +746,27 @@ const GlobalCoverage = () => {
               transition={{ duration: 2, ease: "easeInOut" }}
               className="absolute inset-0 bg-cover bg-center"
               style={{
-                backgroundImage: `url('${coverageImages[currentImage].url}')`,
+                backgroundImage: `url('${heroImages[currentImage]?.url || coverageImages[0].url}')`,
               }}
             />
+          </AnimatePresence>
+
+          {/* Animated Logo Watermark */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`logo-${currentImage}`}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 0.1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 2 }}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            >
+              <img
+                src="/logo.png"
+                alt="Logo Watermark"
+                className="w-[400px] h-[400px] object-contain invert brightness-200"
+              />
+            </motion.div>
           </AnimatePresence>
 
           {/* Location Badge Removed per User Request */}
@@ -787,7 +837,7 @@ const GlobalCoverage = () => {
 
         {/* Centered Slider Indicators - Moved up to avoid stats bar overlap */}
         <div className="absolute bottom-32 left-1/2 -translate-x-1/2 z-20 flex gap-4">
-          {coverageImages.map((_, idx) => (
+          {heroImages.map((_: any, idx: number) => (
             <button
               key={idx}
               onClick={() => setCurrentImage(idx)}

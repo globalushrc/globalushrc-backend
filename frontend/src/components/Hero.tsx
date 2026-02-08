@@ -6,26 +6,32 @@ const heroImages = [
   {
     url: "/assets/images/uk_hero_1.png",
     name: "London Cityscape",
+    theme: "light",
   },
   {
     url: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?q=100&w=3840",
     name: "The London Eye",
+    theme: "light",
   },
   {
     url: "/assets/images/uk_hero_2.png",
     name: "Tower Bridge, London",
+    theme: "light",
   },
   {
     url: "https://images.unsplash.com/photo-1529655683826-aba9b3e77383?q=100&w=3840",
     name: "Big Ben & Westminster",
+    theme: "dark",
   },
   {
     url: "/assets/images/uk_hero_3.png",
     name: "St Paul's Cathedral",
+    theme: "light",
   },
   {
     url: "https://images.unsplash.com/photo-1505761671935-60b3a0b2f484?q=100&w=3840",
     name: "London Bridge View",
+    theme: "light",
   },
 ];
 
@@ -37,13 +43,55 @@ const cyclingPhrases = [
   "International Mobility",
 ];
 
-const Hero = () => {
+const Hero = ({
+  setHeroTheme,
+}: {
+  setHeroTheme: (t: "light" | "dark") => void;
+}) => {
   const [currentImage, setCurrentImage] = useState(0);
   const [currentPhrase, setCurrentPhrase] = useState(0);
+  const [siteSettings, setSiteSettings] = useState<any>({ hero_images: [] });
+
+  const getApiUrl = () => {
+    const hostname = window.location.hostname;
+    return import.meta.env.VITE_API_URL || `http://${hostname}:5001`;
+  };
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const apiUrl = getApiUrl();
+        const res = await fetch(`${apiUrl}/api/settings`);
+        if (res.ok) {
+          const data = await res.json();
+          setSiteSettings(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch settings", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const heroImagesToShow =
+    siteSettings.hero_images && siteSettings.hero_images.length > 0
+      ? siteSettings.hero_images.map((url: string) => ({
+          url,
+          name: "Global HR",
+          theme: "light",
+        }))
+      : heroImages;
+
+  useEffect(() => {
+    // Initial theme set
+    if (heroImagesToShow[currentImage]) {
+      setHeroTheme(heroImagesToShow[currentImage].theme as "light" | "dark");
+    }
+  }, [currentImage, heroImagesToShow]);
 
   useEffect(() => {
     const imageTimer = setInterval(() => {
-      setCurrentImage((prev) => (prev + 1) % heroImages.length);
+      setCurrentImage((prev) => (prev + 1) % heroImagesToShow.length);
     }, 6000);
 
     const phraseTimer = setInterval(() => {
@@ -69,9 +117,27 @@ const Hero = () => {
             transition={{ duration: 2, ease: "easeInOut" }}
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `url('${heroImages[currentImage].url}')`,
+              backgroundImage: `url('${heroImagesToShow[currentImage]?.url || heroImages[0].url}')`,
             }}
           />
+        </AnimatePresence>
+
+        {/* Animated Logo Watermark */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`logo-${currentImage}`}
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 0.15, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.1 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="absolute inset-0 flex items-center justify-center pointer-events-none"
+          >
+            <img
+              src="/logo.png"
+              alt="Background Logo"
+              className="w-[500px] h-[500px] object-contain opacity-50 grayscale brightness-200 contrast-200"
+            />
+          </motion.div>
         </AnimatePresence>
 
         {/* Location Badge Removed per User Request */}

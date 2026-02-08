@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   FaChessBoard,
   FaGavel,
@@ -8,6 +10,44 @@ import {
 import { Link } from "react-router-dom";
 
 const Services = () => {
+  const [currentImage, setCurrentImage] = useState(0);
+  const [siteSettings, setSiteSettings] = useState<any>({});
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const hostname = window.location.hostname;
+        const apiUrl =
+          import.meta.env.VITE_API_URL || `http://${hostname}:5001`;
+        const res = await fetch(`${apiUrl}/api/settings`);
+        if (res.ok) {
+          const data = await res.json();
+          setSiteSettings(data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch settings:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const defaultHero = "/assets/images/1454165804606-c3d57bc86b40.jpg";
+  const heroImages =
+    siteSettings.hero_images && siteSettings.hero_images.length > 0
+      ? siteSettings.hero_images
+      : [defaultHero];
+
+  useEffect(() => {
+    if (heroImages.length <= 1) {
+      setCurrentImage(0);
+      return;
+    }
+    const timer = setInterval(() => {
+      setCurrentImage((prev) => (prev + 1) % heroImages.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, [heroImages.length]);
+
   const services = [
     {
       id: "strategy",
@@ -90,8 +130,40 @@ const Services = () => {
   return (
     <div className="bg-white min-h-screen font-sans">
       {/* Hero Section */}
-      <div className="relative py-24 bg-slate-900 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-[url('/assets/images/1454165804606-c3d57bc86b40.jpg')] bg-cover bg-center opacity-20"></div>
+      <div className="relative py-24 bg-slate-900 text-white overflow-hidden min-h-[400px] flex items-center">
+        {/* Dynamic Background Slider */}
+        <div className="absolute inset-0 z-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentImage}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.2 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 1.5 }}
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url('${heroImages[currentImage]}')` }}
+            />
+          </AnimatePresence>
+
+          {/* Animated Logo Watermark */}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={`logo-${currentImage}`}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 0.1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 2 }}
+              className="absolute inset-0 flex items-center justify-center pointer-events-none"
+            >
+              <img
+                src="/logo.png"
+                alt="Logo Watermark"
+                className="w-[400px] h-[400px] object-contain invert brightness-200"
+              />
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-slate-900/40"></div>
         <div className="container mx-auto px-4 relative z-10 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">

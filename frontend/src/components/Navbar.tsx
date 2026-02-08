@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { FaBars, FaTimes } from "react-icons/fa";
 import logo from "/logo.png"; // Updated import to use the logo in public folder
 
-const Navbar = () => {
+const Navbar = ({ heroTheme }: { heroTheme?: "light" | "dark" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
@@ -35,7 +35,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`fixed w-full z-50 transition-all duration-300 ${scrolled || isWhitePage ? "bg-white shadow-md py-2" : "bg-transparent py-4"}`}
+      className={`fixed w-full z-50 transition-all duration-300 ${scrolled || isWhitePage ? "bg-white shadow-md py-2" : "bg-transparent py-4 text-white"}`}
     >
       <div className="container mx-auto px-4 md:px-8 flex justify-between items-center">
         <Link to="/" className="flex items-center gap-2 group shrink-0">
@@ -45,13 +45,21 @@ const Navbar = () => {
             className="h-10 md:h-11 w-auto object-contain transition-all duration-300"
             style={{
               filter:
-                scrolled || isWhitePage
+                scrolled ||
+                isWhitePage ||
+                (location.pathname === "/" && heroTheme === "light")
                   ? "brightness(0) saturate(100%) invert(18%) sepia(88%) saturate(2643%) hue-rotate(209deg) brightness(94%) contrast(92%)"
                   : "none",
             }}
           />
           <span
-            className={`text-base md:text-lg font-bold uppercase tracking-tight whitespace-nowrap ${scrolled || isWhitePage ? "text-blue-900" : "text-white"}`}
+            className={`text-base md:text-lg font-bold uppercase tracking-tight whitespace-nowrap transition-colors duration-300 ${
+              scrolled ||
+              isWhitePage ||
+              (location.pathname === "/" && heroTheme === "light")
+                ? "text-blue-900"
+                : "text-white"
+            }`}
           >
             Global US HRC
           </span>
@@ -64,7 +72,9 @@ const Navbar = () => {
               key={link.name}
               to={link.path}
               className={`relative text-sm font-bold tracking-tight transition-colors group whitespace-nowrap ${
-                scrolled || isWhitePage
+                scrolled ||
+                isWhitePage ||
+                (location.pathname === "/" && heroTheme === "light")
                   ? "text-slate-700 hover:text-blue-600"
                   : "text-white/90 hover:text-white"
               }`}
@@ -94,8 +104,12 @@ const Navbar = () => {
           </Link>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className={`text-2xl focus:outline-none ${
-              scrolled || isWhitePage ? "text-slate-800" : "text-white"
+            className={`text-2xl focus:outline-none transition-colors duration-300 ${
+              scrolled ||
+              isWhitePage ||
+              (location.pathname === "/" && heroTheme === "light")
+                ? "text-slate-800"
+                : "text-white"
             }`}
           >
             {isOpen ? <FaTimes /> : <FaBars />}

@@ -1,4 +1,5 @@
 import { Routes, Route, useLocation } from "react-router-dom";
+import { useState } from "react";
 // const API_URL = import.meta.env.VITE_API_URL;
 
 import Navbar from "./components/Navbar";
@@ -23,6 +24,7 @@ import PaymentFailure from "./pages/PaymentFailure";
 
 function App() {
   const location = useLocation();
+  const [heroTheme, setHeroTheme] = useState<"light" | "dark">("dark");
   const isAdminPath =
     location.pathname === "/admin" ||
     location.pathname === "/login" ||
@@ -30,10 +32,10 @@ function App() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white">
-      {!isAdminPath && <Navbar />}
+      {!isAdminPath && <Navbar heroTheme={heroTheme} />}
       <main className="flex-grow">
         <Routes>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home setHeroTheme={setHeroTheme} />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
           <Route path="/global-coverage" element={<GlobalCoverage />} />
